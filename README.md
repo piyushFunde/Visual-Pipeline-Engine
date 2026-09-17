@@ -2,7 +2,11 @@
 
 ## Overview
 Visual Pipeline Engine is a full-stack application that lets users build, save, load, validate, and execute directed pipelines using a drag-and-drop node editor.
-The frontend is a React-based visual canvas powered by React Flow. The backend is a Spring Boot service with DAG validation, pipeline persistence using H2 in-memory database, and a simulated execution engine for pipeline nodes.
+The frontend is a React-based visual canvas powered by React Flow. The backend is a Spring Boot service with DAG validation, pipeline persistence using H2 in-memory database, and a simulated execution engine for pipeline nodes
+
+## Architecture Diagram
+<img width="3463" height="6510" alt="diagram (1)" src="https://github.com/user-attachments/assets/fc0b7e90-990f-418e-b356-fcfe39411b15" />
+
 
 ## What’s Included
 - Drag-and-drop pipeline building interface
