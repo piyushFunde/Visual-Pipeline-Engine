@@ -539,6 +539,24 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #dce8dc;
+  outline-offset: 3px;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 700ms cubic-bezier(0.2, 0.7, 0.2, 1), transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: var(--delay, 0ms);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .landing-page {
   --page-bg: #191919;
   --surface: #222222;
@@ -557,6 +575,50 @@ a {
 .landing-page a {
   color: inherit;
   text-decoration: none;
+}
+
+.hero-line {
+  display: block;
+  overflow: hidden;
+}
+
+.hero-line > span {
+  display: block;
+  opacity: 0;
+  transform: translateY(100%);
+  animation: hero-line-rise 720ms cubic-bezier(0.2, 0.74, 0.18, 1) forwards;
+  animation-fill-mode: both;
+}
+
+.hero-line:nth-child(1) > span { animation-delay: 120ms; }
+.hero-line:nth-child(2) > span { animation-delay: 240ms; }
+.hero-line:nth-child(3) > span { animation-delay: 360ms; }
+
+@keyframes hero-line-rise {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-art-surface {
+  display: block;
+  animation: hero-surface-fade 760ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes hero-surface-fade {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .site-header {
@@ -646,6 +708,10 @@ a {
   transform: translateY(-2px);
 }
 
+.button {
+  box-shadow: none;
+}
+
 .button-light {
   background: #f4f2ee;
   color: #171717;
@@ -675,7 +741,7 @@ a {
 .hero-section {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(360px, 0.87fr) minmax(480px, 1.13fr);
+  grid-template-columns: minmax(360px, 0.87fr) minmax(560px, 1.13fr);
   align-items: center;
   gap: clamp(35px, 6vw, 96px);
   width: min(100% - 80px, 1440px);
@@ -715,7 +781,7 @@ a {
 .contact-section h2 {
   margin: 0;
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(54px, 6.2vw, 88px);
+  font-size: clamp(48px, 4.3vw, 84px);
   font-weight: 400;
   letter-spacing: -0.06em;
   line-height: 0.92;
@@ -778,9 +844,11 @@ a {
 .hero-art {
   position: relative;
   display: flex;
-  min-height: 480px;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  min-height: 480px;
+  gap: 10px;
 }
 
 .hero-art-orbit {
@@ -805,22 +873,23 @@ a {
 }
 
 .hero-art-label {
-  position: absolute;
-  z-index: 1;
   color: #92918e;
   font-size: 9px;
   letter-spacing: 0.17em;
 }
 
 .hero-art-label--top {
-  top: 4%;
-  left: 5%;
+  /* sits in normal flow just above the mockup surface */
+  align-self: flex-start;
+  padding-left: 2px;
+  margin-bottom: 2px;
 }
 
 .workflow-preview {
   position: relative;
   z-index: 1;
-  width: min(100%, 620px);
+  width: min(100%, 640px);
+  min-width: 520px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 14px;
@@ -837,10 +906,21 @@ a {
   height: 44px;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   padding: 0 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   color: #b7b5b1;
   font-size: 10px;
+  white-space: nowrap;
+}
+
+.preview-window-bar > span:nth-child(2) {
+  /* "New workflow" – centered, truncated before it hits the status */
+  flex: 1;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .preview-window-dots {
@@ -914,31 +994,41 @@ a {
   position: absolute;
   z-index: 1;
   display: flex;
-  width: 29%;
+  width: 28%;
+  min-width: 110px;
   min-height: 58px;
   align-items: center;
   gap: 10px;
-  padding: 9px;
+  padding: 9px 10px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 7px;
   background: #292a29;
   box-shadow: 0 9px 24px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
 }
 
 .preview-node > span:nth-child(2) {
   display: grid;
-  gap: 4px;
+  gap: 3px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .preview-node strong {
   color: #e9e7e2;
   font-size: 10px;
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .preview-node small {
   color: #94938e;
   font-size: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .preview-node-icon {
@@ -1276,11 +1366,21 @@ a {
 }
 
 .how-flow-link {
+  /* Positioned at the vertical center of the gap between this row and the next */
   position: absolute;
-  left: calc(50% - 8px);
-  transform: translateY(36px);
+  bottom: calc(-11px / 2 - 8px); /* half the grid gap, minus half icon height */
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
   color: #a9c2ad;
   font-size: 13px;
+}
+
+.how-copy h2 {
+  text-wrap: balance;
 }
 
 .how-flow-item {
@@ -1288,8 +1388,9 @@ a {
 }
 
 .how-flow-item:not(:last-child) .how-flow-link {
-  right: 10px;
-  left: auto;
+  /* keep the centered positioning; remove any override */
+  right: auto;
+  left: 50%;
 }
 
 .how-visual-caption {
@@ -1657,6 +1758,7 @@ a {
 
   .workflow-preview {
     width: min(100%, 700px);
+    min-width: 0;
   }
 
   .intro-section {
@@ -1833,6 +1935,7 @@ a {
 
   .workflow-preview {
     border-radius: 9px;
+    min-width: 0;
     transform: rotate(-1deg);
   }
 
@@ -2050,6 +2153,24 @@ a {
   *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
-    animation: none !important;
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+  }
+
+  /* Ensure above-the-fold hero elements are immediately visible */
+  .hero-line > span {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+  }
+
+  .hero-art-surface {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Reveal elements that have not yet been observed must still be visible */
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
