@@ -5,6 +5,7 @@ PipeCanvas is a full-stack workflow studio that lets users build, save, load, va
 Its responsive landing page introduces the product and links directly to the React Flow canvas. The Spring Boot backend provides DAG validation, pipeline persistence with an H2 in-memory database, and a simulated execution engine.
 
 ## Architecture Diagram
+```mermaid
 
 flowchart TD
 
@@ -66,6 +67,7 @@ class node_editor toneBlue
 class node_application,node_controller,node_validation,node_execution,node_properties,node_maven,node_validation_response,node_execution_response toneAmber
 class node_entity,node_repository,node_h2 toneMint
 
+```
 
 ## What’s Included
 - Drag-and-drop pipeline building interface
