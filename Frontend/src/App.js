@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Routes, Route, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowDown,
   ArrowUpRight,
@@ -14,7 +15,11 @@ import {
 import { PipelineToolbar } from './toolbar';
 import { PipelineUI } from './ui';
 import { SubmitButton } from './submit';
+import RequireAuth from './components/RequireAuth';
+import AuthPage from './pages/AuthPage';
+import { useAuth } from './context/AuthContext';
 
+/* ─── Scroll-reveal hook ─── */
 function useReveal() {
   const ref = useRef(null);
 
@@ -26,14 +31,10 @@ function useReveal() {
       (entries) => {
         const entry = entries[0];
         if (!entry || !entry.isIntersecting) return;
-
         node.classList.add('is-visible');
         observer.unobserve(node);
       },
-      {
-        threshold: 0.15,
-        rootMargin: '0px 0px -10% 0px',
-      },
+      { threshold: 0.15, rootMargin: '0px 0px -10% 0px' },
     );
 
     observer.observe(node);
@@ -45,7 +46,6 @@ function useReveal() {
 
 function Reveal({ as: Tag = 'div', className = '', delay = 0, children, ...props }) {
   const ref = useReveal();
-
   return (
     <Tag
       ref={ref}
@@ -59,10 +59,10 @@ function Reveal({ as: Tag = 'div', className = '', delay = 0, children, ...props
 }
 
 const workflowNodes = [
-  { className: 'preview-node--trigger', label: 'Input', detail: 'Form trigger', number: '01', icon: LogIn },
-  { className: 'preview-node--process', label: 'Text', detail: 'Format the data', number: '02', icon: Type },
-  { className: 'preview-node--decision', label: 'Condition', detail: 'Check the request', number: '03', icon: GitBranch },
-  { className: 'preview-node--output', label: 'API', detail: 'Send request', number: '04', icon: Globe },
+  { className: 'preview-node--trigger',  label: 'Input',     detail: 'Form trigger',       number: '01', icon: LogIn },
+  { className: 'preview-node--process',  label: 'Text',      detail: 'Format the data',    number: '02', icon: Type },
+  { className: 'preview-node--decision', label: 'Condition', detail: 'Check the request',  number: '03', icon: GitBranch },
+  { className: 'preview-node--output',   label: 'API',       detail: 'Send request',       number: '04', icon: Globe },
 ];
 
 function WorkflowPreview() {
@@ -126,24 +126,55 @@ function PipeCanvasMark() {
   );
 }
 
-function App() {
-  const [showCanvas, setShowCanvas] = useState(false);
+/* ─── Editor page (protected) ─── */
+function EditorPage() {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
-  if (showCanvas) {
-    return (
-      <div className="editor-page">
-        <div className="editor-topbar">
-          <button className="editor-back-button" type="button" onClick={() => setShowCanvas(false)}>
-            <ArrowUpRight size={16} strokeWidth={1.8} aria-hidden="true" style={{ transform: 'rotate(225deg)' }} /> Back to PipeCanvas
-          </button>
-          <span className="editor-brand"><PipeCanvasMark /> PipeCanvas <span>WORKSPACE</span></span>
-        </div>
-        <PipelineToolbar />
-        <PipelineUI />
-        <SubmitButton />
+  const handleBack = () => {
+    navigate('/');
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  return (
+    <div className="editor-page">
+      <div className="editor-topbar">
+        <button className="editor-back-button" type="button" onClick={handleBack}>
+          <ArrowUpRight size={16} strokeWidth={1.8} aria-hidden="true" style={{ transform: 'rotate(225deg)' }} /> Back to PipeCanvas
+        </button>
+        <span className="editor-brand"><PipeCanvasMark /> PipeCanvas <span>WORKSPACE</span></span>
+        <button
+          type="button"
+          onClick={handleLogout}
+          style={{
+            background: 'transparent',
+            border: '1px solid rgba(255,255,255,0.15)',
+            color: '#94a3b8',
+            borderRadius: '8px',
+            padding: '6px 14px',
+            fontSize: '12px',
+            cursor: 'pointer',
+          }}
+        >
+          Log out
+        </button>
       </div>
-    );
-  }
+      <PipelineToolbar />
+      <PipelineUI />
+      <SubmitButton />
+    </div>
+  );
+}
+
+/* ─── Landing page ─── */
+function LandingPage() {
+  const navigate = useNavigate();
+
+  const goToEditor = () => navigate('/editor');
 
   return (
     <div className="landing-page" id="home">
@@ -159,9 +190,9 @@ function App() {
         </nav>
         <div className="header-actions">
           <a className="header-contact" href="#contact">Contact</a>
-          <button className="button button-light button-small" type="button" onClick={() => setShowCanvas(true)}>
-            Open the canvas <ArrowUpRight size={16} strokeWidth={1.8} aria-hidden="true" />
-          </button>
+          <Link className="button button-light button-small" to="/login">
+            Sign in <ArrowUpRight size={16} strokeWidth={1.8} aria-hidden="true" />
+          </Link>
         </div>
       </header>
 
@@ -180,7 +211,7 @@ function App() {
               Turn tangled steps into clear, connected workflows. Build visually, follow every connection, and turn ideas into a simulated run with a step-by-step log.
             </Reveal>
             <div className="hero-actions">
-              <Reveal as="button" className="button button-light" delay={360} type="button" onClick={() => setShowCanvas(true)}>
+              <Reveal as="button" className="button button-light" delay={360} type="button" onClick={goToEditor}>
                 Start building <ArrowUpRight size={16} strokeWidth={1.8} aria-hidden="true" />
               </Reveal>
               <Reveal as="a" className="button button-dark" delay={420} href="#product">
@@ -271,7 +302,7 @@ function App() {
               <Reveal as="li" delay={200}><span>02</span><div><strong>Connect the steps</strong><small>Map the path your information takes.</small></div></Reveal>
               <Reveal as="li" delay={300}><span>03</span><div><strong>Simulated run</strong><small>Review a step-by-step log without claiming live integrations.</small></div></Reveal>
             </ol>
-            <Reveal as="button" className="button button-light" delay={360} type="button" onClick={() => setShowCanvas(true)}>
+            <Reveal as="button" className="button button-light" delay={360} type="button" onClick={goToEditor}>
               Make your first flow <ArrowUpRight size={16} strokeWidth={1.8} aria-hidden="true" />
             </Reveal>
           </div>
@@ -291,7 +322,7 @@ function App() {
         <Reveal as="section" className="contact-section" id="contact" delay={0}>
           <p className="eyebrow"><span className="eyebrow-line" aria-hidden="true" /> YOUR NEXT IDEA STARTS HERE</p>
           <h2>Ready to make<br /><em>things flow?</em></h2>
-          <button className="button button-light" type="button" onClick={() => setShowCanvas(true)}>
+          <button className="button button-light" type="button" onClick={goToEditor}>
             Open PipeCanvas <ArrowUpRight size={16} strokeWidth={1.8} aria-hidden="true" />
           </button>
           <div className="contact-decoration" aria-hidden="true"><span /><span /><span /></div>
@@ -307,4 +338,23 @@ function App() {
   );
 }
 
-export default App;
+/* ─── Root App with routes ─── */
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/"       element={<LandingPage />} />
+      <Route path="/login"  element={<AuthPage />} />
+      <Route path="/signup" element={<AuthPage />} />
+      <Route
+        path="/editor"
+        element={
+          <RequireAuth>
+            <EditorPage />
+          </RequireAuth>
+        }
+      />
+      {/* fallback → landing */}
+      <Route path="*" element={<LandingPage />} />
+    </Routes>
+  );
+}
