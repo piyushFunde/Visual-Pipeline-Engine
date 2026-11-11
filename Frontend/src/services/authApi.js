@@ -38,3 +38,4 @@ export async function getMe() {
   if (!res.ok) throw new Error('Not authenticated');
   return res.json();
 }
+

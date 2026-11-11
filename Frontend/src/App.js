@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Routes, Route, useNavigate, Link } from 'react-router-dom';
 import {
   ArrowDown,
@@ -67,7 +67,7 @@ const workflowNodes = [
 
 function WorkflowPreview() {
   return (
-    <div className="workflow-preview" aria-label="Preview of a connected PipeCanvas workflow">
+    <div className="workflow-preview" aria-label="Preview of a connected Visual Pipeline Engine workflow">
       <div className="preview-window-bar">
         <div className="preview-window-dots" aria-hidden="true"><i /><i /><i /></div>
         <span>New workflow</span>
@@ -114,14 +114,23 @@ function WorkflowPreview() {
   );
 }
 
-function PipeCanvasMark() {
+/* Pipeline-node logo: two inputs merging into one output */
+function VPEMark() {
   return (
-    <svg viewBox="0 0 32 32" aria-hidden="true">
-      <path d="M16 3.5a12.5 12.5 0 1 0 12.5 12.5H16V3.5Z" />
-      <path d="M19.5 3.9v8.6h8.6a12.5 12.5 0 0 0-8.6-8.6Z" />
-      <circle cx="10.5" cy="20.5" r="1.25" />
-      <circle cx="15.75" cy="20.5" r="1.25" />
-      <circle cx="21" cy="20.5" r="1.25" />
+    <svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      {/* top-left input node */}
+      <rect x="1" y="4" width="10" height="8" rx="1.5" />
+      {/* bottom-left input node */}
+      <rect x="1" y="20" width="10" height="8" rx="1.5" />
+      {/* right output node */}
+      <rect x="21" y="12" width="10" height="8" rx="1.5" />
+      {/* bezier connections */}
+      <path d="M11,8 C17,8 17,16 21,16" />
+      <path d="M11,24 C17,24 17,16 21,16" />
+      {/* handle dots */}
+      <circle cx="11" cy="8"  r="2" fill="currentColor" stroke="none" />
+      <circle cx="11" cy="24" r="2" fill="currentColor" stroke="none" />
+      <circle cx="21" cy="16" r="2" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -144,9 +153,9 @@ function EditorPage() {
     <div className="editor-page">
       <div className="editor-topbar">
         <button className="editor-back-button" type="button" onClick={handleBack}>
-          <ArrowUpRight size={16} strokeWidth={1.8} aria-hidden="true" style={{ transform: 'rotate(225deg)' }} /> Back to PipeCanvas
+          <ArrowUpRight size={16} strokeWidth={1.8} aria-hidden="true" style={{ transform: 'rotate(225deg)' }} /> Back to Home
         </button>
-        <span className="editor-brand"><PipeCanvasMark /> PipeCanvas <span>WORKSPACE</span></span>
+        <span className="editor-brand"><VPEMark /> Visual Pipeline Engine <span>WORKSPACE</span></span>
         <button
           type="button"
           onClick={handleLogout}
@@ -179,9 +188,9 @@ function LandingPage() {
   return (
     <div className="landing-page" id="home">
       <header className="site-header">
-        <a className="brand" href="#home" aria-label="PipeCanvas home">
-          <PipeCanvasMark />
-          <span>PipeCanvas</span>
+        <a className="brand" href="#home" aria-label="Visual Pipeline Engine home">
+          <VPEMark />
+          <span>Visual Pipeline Engine</span>
         </a>
         <nav className="site-nav" aria-label="Main navigation">
           <a href="#home">Home</a>
@@ -246,7 +255,7 @@ function LandingPage() {
             </Reveal>
           </div>
           <Reveal as="p" className="intro-description" delay={180}>
-            PipeCanvas gives every part of your process a place. Add the pieces, connect the logic, and see how your workflow comes together before you run a simulated flow.
+            Visual Pipeline Engine gives every part of your process a place. Add the pieces, connect the logic, and see how your workflow comes together before you run a simulated flow.
           </Reveal>
           <div className="feature-grid">
             <Reveal as="article" className="feature-card" delay={0}>
@@ -323,16 +332,16 @@ function LandingPage() {
           <p className="eyebrow"><span className="eyebrow-line" aria-hidden="true" /> YOUR NEXT IDEA STARTS HERE</p>
           <h2>Ready to make<br /><em>things flow?</em></h2>
           <button className="button button-light" type="button" onClick={goToEditor}>
-            Open PipeCanvas <ArrowUpRight size={16} strokeWidth={1.8} aria-hidden="true" />
+            Open Visual Pipeline Engine <ArrowUpRight size={16} strokeWidth={1.8} aria-hidden="true" />
           </button>
           <div className="contact-decoration" aria-hidden="true"><span /><span /><span /></div>
         </Reveal>
       </main>
 
       <footer className="site-footer">
-        <a className="brand footer-brand" href="#home"><PipeCanvasMark /><span>PipeCanvas</span></a>
+        <a className="brand footer-brand" href="#home"><VPEMark /><span>Visual Pipeline Engine</span></a>
         <p>A clearer way to build what comes next.</p>
-        <div className="footer-bottom"><span>© 2026 PipeCanvas</span><a href="#home">Back to top ↑</a><span>Made for ideas in motion.</span></div>
+        <div className="footer-bottom"><span>© 2026 Visual Pipeline Engine</span><a href="#home">Back to top ↑</a><span>Made for ideas in motion.</span></div>
       </footer>
     </div>
   );

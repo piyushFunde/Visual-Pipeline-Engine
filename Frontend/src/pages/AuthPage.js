@@ -6,15 +6,18 @@ import { useAuth } from '../context/AuthContext';
 import * as authApi from '../services/authApi';
 import './AuthPage.css';
 
-/* ─── small PipeCanvas mark (reused from App.js) ─── */
-function PipeCanvasMark() {
+/* ─── Pipeline-node logo (matches App.js VPEMark) ─── */
+function VPEMark() {
   return (
-    <svg viewBox="0 0 32 32" aria-hidden="true" className="auth-logo-mark">
-      <path d="M16 3.5a12.5 12.5 0 1 0 12.5 12.5H16V3.5Z" />
-      <path d="M19.5 3.9v8.6h8.6a12.5 12.5 0 0 0-8.6-8.6Z" />
-      <circle cx="10.5" cy="20.5" r="1.25" />
-      <circle cx="15.75" cy="20.5" r="1.25" />
-      <circle cx="21" cy="20.5" r="1.25" />
+    <svg viewBox="0 0 32 32" aria-hidden="true" className="auth-logo-mark" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="4"  width="10" height="8" rx="1.5" />
+      <rect x="1" y="20" width="10" height="8" rx="1.5" />
+      <rect x="21" y="12" width="10" height="8" rx="1.5" />
+      <path d="M11,8 C17,8 17,16 21,16" />
+      <path d="M11,24 C17,24 17,16 21,16" />
+      <circle cx="11" cy="8"  r="2" fill="currentColor" stroke="none" />
+      <circle cx="11" cy="24" r="2" fill="currentColor" stroke="none" />
+      <circle cx="21" cy="16" r="2" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -49,8 +52,8 @@ function LeftPanel() {
     <div className="auth-left" aria-hidden="true">
       {/* logo */}
       <Link to="/" className="auth-left-logo" tabIndex={-1}>
-        <PipeCanvasMark />
-        <span>PIPECANVAS</span>
+        <VPEMark />
+        <span>VISUAL PIPELINE ENGINE</span>
       </Link>
 
       {/* halftone orb */}
@@ -388,3 +391,4 @@ export default function AuthPage() {
     </div>
   );
 }
+
