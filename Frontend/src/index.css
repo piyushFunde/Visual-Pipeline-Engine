@@ -641,8 +641,8 @@ a:focus-visible {
   width: fit-content;
   color: var(--ink);
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 25px;
-  letter-spacing: -0.055em;
+  font-size: 17px;
+  letter-spacing: -0.02em;
 }
 
 .brand svg,
@@ -1576,7 +1576,7 @@ a:focus-visible {
 }
 
 .footer-brand {
-  font-size: 22px;
+  font-size: 15px;
 }
 
 .site-footer > p {
@@ -1655,7 +1655,7 @@ a:focus-visible {
   letter-spacing: 0.13em;
 }
 
-@keyframes piecanvas-fade-up {
+@keyframes vpe-fade-up {
   from {
     opacity: 0;
     transform: translateY(22px);
@@ -1671,7 +1671,7 @@ a:focus-visible {
 .hero-copy > *,
 .hero-art,
 .hero-index {
-  animation: piecanvas-fade-up 750ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: vpe-fade-up 750ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
 .site-header > :nth-child(2) {
