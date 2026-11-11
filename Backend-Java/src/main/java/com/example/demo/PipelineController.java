@@ -58,7 +58,7 @@ public class PipelineController {
     }
 
     @GetMapping("/pipelines/{id}")
-    public Map<String, Object> getPipeline(@PathVariable("id") Long id) {
+    public Map<String, Object> getPipeline(@PathVariable("id") long id) {
         Map<String, Object> response = new HashMap<>();
         Optional<PipelineEntity> entity = pipelineRepository.findById(id);
         if (entity.isPresent()) {

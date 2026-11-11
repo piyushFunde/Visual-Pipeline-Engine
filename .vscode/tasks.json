@@ -1,0 +1,17 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Java Debug: Maven Compile",
+            "type": "shell",
+            "command": "${workspaceFolder}\\Backend-Java\\mvnw.cmd",
+            "args": [
+                "compile"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}\\Backend-Java"
+            },
+            "problemMatcher": []
+        }
+    ]
+}
