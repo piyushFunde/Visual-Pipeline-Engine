@@ -20,8 +20,8 @@ async function request(path, body) {
 }
 
 /** POST /auth/register */
-export function register({ email, password, marketingOptIn }) {
-  return request('/auth/register', { email, password, marketingOptIn });
+export function register({ name, email, password, marketingOptIn }) {
+  return request('/auth/register', { name, email, password, marketingOptIn });
 }
 
 /** POST /auth/login */

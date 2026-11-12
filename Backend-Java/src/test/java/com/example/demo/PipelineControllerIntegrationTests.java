@@ -5,12 +5,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -32,14 +36,19 @@ class PipelineControllerIntegrationTests {
         String body = "pipeline=" + pipelineJson;
 
         HttpEntity<String> request = new HttpEntity<>(body, headers);
-        ResponseEntity<Map> response = restTemplate.postForEntity("http://localhost:" + port + "/pipelines/execute", request, Map.class);
+        ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                "http://localhost:" + port + "/pipelines/execute",
+                HttpMethod.POST,
+                request,
+                new ParameterizedTypeReference<>() {
+                });
 
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().get("status")).isEqualTo("success");
+        Map<String, Object> responseBody = Objects.requireNonNull(response.getBody(), "Response body must not be null");
+        assertThat(responseBody.get("status")).isEqualTo("success");
 
-        Object logs = response.getBody().get("logs");
-        assertThat(logs).isInstanceOfAny(java.util.List.class);
-        assertThat(((java.util.List<?>) logs)).hasSize(2);
+        Object logs = responseBody.get("logs");
+        assertThat(logs).isInstanceOf(List.class);
+        assertThat((List<?>) logs).hasSize(2);
     }
 }

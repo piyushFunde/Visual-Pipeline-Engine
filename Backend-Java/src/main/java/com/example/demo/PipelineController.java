@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
 public class PipelineController {
 
     private final DagValidationService dagValidationService;
@@ -58,7 +57,7 @@ public class PipelineController {
     }
 
     @GetMapping("/pipelines/{id}")
-    public Map<String, Object> getPipeline(@PathVariable("id") Long id) {
+    public Map<String, Object> getPipeline(@PathVariable("id") long id) {
         Map<String, Object> response = new HashMap<>();
         Optional<PipelineEntity> entity = pipelineRepository.findById(id);
         if (entity.isPresent()) {

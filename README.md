@@ -131,6 +131,13 @@ Validates and executes a pipeline.
 - Request form data: `pipeline=<json>`
 - Response includes `status` and `logs`
 
+### Authentication
+- `POST /auth/register` — accepts JSON `{ "name": "...", "email": "...", "password": "..." }`; name is required and passwords must be at least 8 characters. Creates an account and starts a session.
+- `POST /auth/login` — accepts the same JSON credentials and starts a session for an existing account.
+- `GET /auth/me` — returns the account for the current session.
+
+Passwords are stored as PBKDF2 hashes. The browser session uses a credentialed cookie; the API currently allows the frontend origin `http://localhost:3000`.
+
 ## Running the Project
 ### Frontend
 ```bash
