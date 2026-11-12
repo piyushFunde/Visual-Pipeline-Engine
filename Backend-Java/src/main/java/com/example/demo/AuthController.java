@@ -27,7 +27,7 @@ public class AuthController {
 
     private static final String SESSION_ACCOUNT_ID = "accountId";
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
-    private static final int PASSWORD_ITERATIONS = 210_000;
+    private static final int PBKDF2_ITERATIONS = 210_000;
     private static final int SALT_LENGTH = 16;
     private static final int HASH_LENGTH_BITS = 256;
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
@@ -132,8 +132,8 @@ public class AuthController {
     private static String hashPassword(String password) {
         byte[] salt = new byte[SALT_LENGTH];
         SECURE_RANDOM.nextBytes(salt);
-        byte[] hash = derivePasswordHash(password, salt, PASSWORD_ITERATIONS);
-        return "pbkdf2$" + PASSWORD_ITERATIONS + "$"
+        byte[] hash = derivePasswordHash(password, salt, PBKDF2_ITERATIONS);
+        return "pbkdf2$" + PBKDF2_ITERATIONS + "$"
                 + Base64.getEncoder().encodeToString(salt) + "$"
                 + Base64.getEncoder().encodeToString(hash);
     }
