@@ -132,6 +132,7 @@ export default function AuthPage() {
   const isSignup = location.pathname === '/signup';
 
   /* form state */
+  const [name,     setName]     = useState('');
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
   const [showPw,   setShowPw]   = useState(false);
@@ -148,6 +149,10 @@ export default function AuthPage() {
     setEmail(e.target.value);
     setErrors((prev) => ({ ...prev, email: null }));
   };
+  const handleName = (e) => {
+    setName(e.target.value);
+    setErrors((prev) => ({ ...prev, name: null }));
+  };
   const handlePassword = (e) => {
     setPassword(e.target.value);
     setErrors((prev) => ({ ...prev, password: null }));
@@ -156,6 +161,9 @@ export default function AuthPage() {
   /* ── validation ── */
   function validate() {
     const errs = {};
+    if (isSignup && !name.trim()) {
+      errs.name = 'Enter your name.';
+    }
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       errs.email = 'Enter a valid email address.';
     }
@@ -182,7 +190,7 @@ export default function AuthPage() {
     try {
       let userData;
       if (isSignup) {
-        userData = await authApi.register({ email, password, marketingOptIn: marketing });
+        userData = await authApi.register({ name: name.trim(), email, password, marketingOptIn: marketing });
       } else {
         userData = await authApi.login({ email, password });
       }
@@ -261,8 +269,31 @@ export default function AuthPage() {
                 </label>
               )}
 
+              {isSignup && (
+                <div className={`auth-field${errors.name ? ' auth-field--error' : ''}`}>
+                  <label className="auth-label" htmlFor="auth-name">Full name</label>
+                  <input
+                    id="auth-name"
+                    type="text"
+                    autoComplete="name"
+                    maxLength={120}
+                    className="auth-input"
+                    placeholder="Your name"
+                    value={name}
+                    onChange={handleName}
+                    aria-describedby={errors.name ? 'auth-name-err' : undefined}
+                    aria-invalid={!!errors.name}
+                  />
+                  {errors.name && (
+                    <span id="auth-name-err" className="auth-field-error" role="alert">
+                      {errors.name}
+                    </span>
+                  )}
+                </div>
+              )}
+
               {/* email */}
-              <div className={`auth-field auth-stagger${errors.email ? ' auth-field--error' : ''}`}>
+              <div className={`auth-field${errors.email ? ' auth-field--error' : ''}`}>
                 <label className="auth-label" htmlFor="auth-email">Email</label>
                 <input
                   id="auth-email"
@@ -283,7 +314,7 @@ export default function AuthPage() {
               </div>
 
               {/* password */}
-              <div className={`auth-field auth-stagger${errors.password ? ' auth-field--error' : ''}`}>
+              <div className={`auth-field${errors.password ? ' auth-field--error' : ''}`}>
                 <label className="auth-label" htmlFor="auth-password">Password</label>
                 <div className="auth-pw-wrap">
                   <input
