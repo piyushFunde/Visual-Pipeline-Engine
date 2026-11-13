@@ -12,8 +12,6 @@ import java.util.regex.Pattern;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +19,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 @RestController
 public class AuthController {
@@ -134,7 +135,8 @@ public class AuthController {
         SECURE_RANDOM.nextBytes(salt);
         byte[] hash = derivePasswordHash(password, salt, PBKDF2_ITERATIONS);
         return "pbkdf2$" + PBKDF2_ITERATIONS + "$"
-                + Base64.getEncoder().encodeToString(salt) + "$"
+
+        + Base64.getEncoder().encodeToString(salt) + "$"
                 + Base64.getEncoder().encodeToString(hash);
     }
 
