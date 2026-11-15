@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,12 +16,14 @@ public class PipelineController {
     private final DagValidationService dagValidationService;
     private final ExecutionService executionService;
     private final PipelineRepository pipelineRepository;
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper;
 
-    public PipelineController(DagValidationService dagValidationService, ExecutionService executionService, PipelineRepository pipelineRepository) {
+    public PipelineController(DagValidationService dagValidationService, ExecutionService executionService,
+                              PipelineRepository pipelineRepository, ObjectMapper mapper) {
         this.dagValidationService = dagValidationService;
         this.executionService = executionService;
         this.pipelineRepository = pipelineRepository;
+        this.mapper = mapper;
     }
 
     @GetMapping("/")
@@ -72,7 +75,8 @@ public class PipelineController {
     }
 
     @PostMapping("/pipelines/execute")
-    public Map<String, Object> executePipeline(@RequestParam("pipeline") String pipeline) {
+    public Map<String, Object> executePipeline(@RequestParam("pipeline") String pipeline,
+                                               @RequestParam(value = "pipelineId", required = false) Long pipelineId) {
         Map<String, Object> validation = dagValidationService.parseAndValidate(pipeline);
         if (!(Boolean) validation.getOrDefault("is_dag", false)) {
             validation.put("status", "error");
@@ -82,6 +86,7 @@ public class PipelineController {
 
         @SuppressWarnings("unchecked")
         List<String> order = (List<String>) validation.get("execution_order");
-        return executionService.executePipeline(pipeline, order);
+        Map<String, Object> inputs = Collections.emptyMap();
+        return executionService.executePipeline(pipeline, order, pipelineId, inputs);
     }
 }

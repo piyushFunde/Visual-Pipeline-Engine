@@ -13,24 +13,26 @@ Its responsive landing page introduces the product and links directly to the Rea
 - Responsive PieCanvas landing page with direct access to the editor
 - Save/load pipeline persistence with Spring Data JPA + H2
 - Backend DAG validation and topological execution order
-- Pipeline execution engine that simulates text and LLM node behavior
+- Upstream-aware execution with condition branches and persistent run/step history
+- Flow Doctor validation, test cases, and explicitly heuristic estimates
 - Toolbar actions for Save, Load, and Execute
-- Frontend tests for toolbar rendering
-- Backend integration test for `/pipelines/execute`
+- React tests for replay, Doctor fixes, and failed test output
+- JUnit + MockMvc coverage for execution, validation, tests, and estimates
 
 ## Architecture
 ### Frontend
 - React 18 + React Flow
 - Zustand for state management
 - Custom node components: Input, Output, Text, LLM, Timer, Condition, API, Database, Webhook
-- Toolbar with buttons for saving, loading, and executing pipelines
+- Dark canvas workspace with run replay, Flow Doctor, Tests, and Estimate panels
 
 ### Backend
 - Spring Boot 3.2.4
 - Java 17
 - Spring Data JPA + H2 database
 - REST endpoints for pipeline parsing, saving, loading, and executing
-- Execution engine walks nodes in topological order and generates a step-by-step log
+- Execution engine walks nodes in topological order, records each step, and skips untaken condition branches
+- Run, run-step, test-case, and test-result JPA entities use portable scalar IDs and text JSON fields
 
 ## Supported Node Types
 - `customInput` — Input data source
@@ -66,9 +68,24 @@ Loads a saved pipeline by ID.
 - Response includes `nodes` and `edges`
 
 ### `POST /pipelines/execute`
-Validates and executes a pipeline.
+Validates and executes a pipeline, returning the additive `runId` and compatibility `logs`.
 - Request form data: `pipeline=<json>`
-- Response includes `status` and `logs`
+- An optional `pipelineId` associates run history with a saved pipeline
+- `GET /runs/{runId}` returns the complete run and ordered steps; `GET /pipelines/{id}/runs` returns summaries
+
+### `POST /pipelines/validate`
+Accepts the pipeline graph as JSON and returns a score plus validation issues. Fixes are descriptors only; the server does not mutate the graph.
+
+### Test cases
+- `GET|POST /pipelines/{id}/tests`
+- `PUT|DELETE /pipelines/{id}/tests/{testId}`
+- `POST /pipelines/{id}/tests/run` executes each case against the saved graph
+- `POST /pipelines/{id}/tests/from-run/{runId}` creates output assertions from a run
+
+Assertions supported: `outputEquals`, `outputContains`, `branchTaken`, `noError`, and `maxDurationMs`.
+
+### `POST /pipelines/estimate`
+Accepts a pipeline graph as JSON and returns per-node and total estimates. The response includes `isEstimate: true`; latency uses configurable node-type baselines and prompt token estimates use prompt length divided by four. These values are not measured runtime.
 
 ### Authentication
 - `POST /auth/register` — accepts JSON `{ "name": "...", "email": "...", "password": "..." }`; name is required and passwords must be at least 8 characters. Creates an account and starts a session.
@@ -101,6 +118,7 @@ cd Backend-Java
 .\mvnw.cmd test
 ```
 A dedicated integration test covers `/pipelines/execute`.
+MockMvc tests additionally cover run recording and skipped branches, validation fixes, test CRUD/execution/from-run, and estimate labeling.
 
 ### Frontend
 Run the React test suite:
@@ -109,8 +127,9 @@ cd Frontend
 npm test -- --watchAll=false
 ```
 A toolbar rendering test verifies Save / Load / Execute button presence.
+UI tests verify replay state changes, applying a Doctor fix, and expected-versus-actual test failures.
 
 ## Notes
 - The backend uses an H2 in-memory database by default, which resets when the server stops.
-- The current load action fetches pipeline ID `1` for demo purposes. This can be extended to support an ID selector or pipeline list.
+- The Load action fetches pipeline ID `1` for demo purposes; a pipeline picker is not included.
 - The execution engine currently simulates runtime behavior rather than connecting to an actual external LLM or API.

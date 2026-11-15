@@ -9,7 +9,11 @@ import java.util.*;
 @Service
 public class DagValidationService {
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper;
+
+    public DagValidationService(ObjectMapper mapper) {
+        this.mapper = mapper;
+    }
 
     public Map<String, Object> parseAndValidate(String pipelineJson) {
         try {
