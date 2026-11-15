@@ -202,7 +202,6 @@ export const PipelineUI = ({ onBack, onLogout }) => {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
-  const activeIssueNodes = useMemo(() => new Set(doctor.issues.map((issue) => issue.nodeId).filter(Boolean)), [doctor]);
   const stepIndexByNode = useMemo(() => {
     const result = new Map();
     runSteps.forEach((step) => result.set(step.nodeId, step));
@@ -218,7 +217,6 @@ export const PipelineUI = ({ onBack, onLogout }) => {
     else if (visibleStep?.status === 'DONE') status = 'done';
     const classNames = [
       `run-node--${status}`,
-      activeIssueNodes.has(node.id) ? 'has-warning' : '',
       focusedNode === node.id ? 'doctor-focus' : '',
     ].filter(Boolean).join(' ');
     return {
@@ -230,10 +228,9 @@ export const PipelineUI = ({ onBack, onLogout }) => {
         nodeType: node.data?.nodeType || node.type,
         runtimeMs: visibleStep?.durationMs,
         runStatus: visibleStep?.status,
-        warning: activeIssueNodes.has(node.id),
       },
     };
-  }), [nodes, stepIndexByNode, replayIndex, activeIssueNodes, focusedNode]);
+  }), [nodes, stepIndexByNode, replayIndex, focusedNode]);
   const displayEdges = useMemo(() => edges.map((edge) => {
     const sourceStep = stepIndexByNode.get(edge.source);
     const targetStep = stepIndexByNode.get(edge.target);
