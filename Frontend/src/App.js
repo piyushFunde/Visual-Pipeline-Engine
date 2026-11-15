@@ -13,9 +13,7 @@ import {
   Type,
   Workflow,
 } from 'lucide-react';
-import { PipelineToolbar } from './toolbar';
 import { PipelineUI } from './ui';
-import { SubmitButton } from './submit';
 import RequireAuth from './components/RequireAuth';
 import AuthPage from './pages/AuthPage';
 import { useAuth } from './context/AuthContext';
@@ -152,30 +150,7 @@ function EditorPage() {
 
   return (
     <div className="editor-page">
-      <div className="editor-topbar">
-        <button className="editor-back-button" type="button" onClick={handleBack}>
-          <ArrowUpRight size={16} strokeWidth={1.8} aria-hidden="true" style={{ transform: 'rotate(225deg)' }} /> Back to Home
-        </button>
-        <span className="editor-brand"><VPEMark /> Visual Pipeline Engine <span>WORKSPACE</span></span>
-        <button
-          type="button"
-          onClick={handleLogout}
-          style={{
-            background: 'transparent',
-            border: '1px solid rgba(255,255,255,0.15)',
-            color: '#94a3b8',
-            borderRadius: '8px',
-            padding: '6px 14px',
-            fontSize: '12px',
-            cursor: 'pointer',
-          }}
-        >
-          Log out
-        </button>
-      </div>
-      <PipelineToolbar />
-      <PipelineUI />
-      <SubmitButton />
+      <PipelineUI onBack={handleBack} onLogout={handleLogout} />
     </div>
   );
 }

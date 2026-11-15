@@ -12,6 +12,65 @@ export const useStore = create((set, get) => ({
     nodes: [],
     edges: [],
     nodeIDs: {},
+    currentRun: null,
+    replayIndex: -1,
+    playing: false,
+    speed: 1,
+    history: [],
+    setCurrentRun: (currentRun) => set({ currentRun, replayIndex: -1, playing: false }),
+    setReplayIndex: (replayIndex) => set({ replayIndex }),
+    setPlaying: (playing) => set({ playing }),
+    toggleSpeed: () => set({ speed: get().speed === 1 ? 2 : 1 }),
+    undo: () => {
+      const history = get().history;
+      if (!history.length) return;
+      const previous = history[history.length - 1];
+      set({ nodes: previous.nodes, edges: previous.edges, history: history.slice(0, -1) });
+    },
+    applyDoctorFix: (operations) => {
+      const { nodes, edges } = get();
+      const nextNodes = nodes.map((node) => ({ ...node, data: { ...node.data } }));
+      const nextEdges = [...edges];
+      operations.forEach((operation) => {
+        if (operation.type === 'addEdge') {
+          const target = nextNodes.find((node) => node.id === operation.target);
+          const targetHandle = target?.type === 'llm'
+            ? 'prompt'
+            : target?.type === 'text'
+              ? (target.data?.text?.match(/{{\s*([\w.-]+)\s*}}/) || [])[1]
+              : target?.type === 'customOutput' || target?.type === 'output'
+                ? 'value'
+              : undefined;
+          nextEdges.push({
+            id: `doctor-${Date.now()}-${nextEdges.length}`,
+            source: operation.source,
+            target: operation.target,
+            sourceHandle: operation.sourceHandle,
+            targetHandle,
+            type: 'pipeline',
+          });
+        } else if (operation.type === 'setNodeData') {
+          const node = nextNodes.find((item) => item.id === operation.nodeId);
+          if (node) node.data[operation.key] = operation.value;
+        } else if (operation.type === 'renameNode') {
+          const node = nextNodes.find((item) => item.id === operation.nodeId);
+          if (node) {
+            const nameKey = node.type === 'customInput' || node.type === 'input'
+              ? 'inputName'
+              : node.type === 'customOutput' || node.type === 'output'
+                ? 'outputName'
+                : 'name';
+            node.data[nameKey] = operation.name;
+            node.data.name = operation.name;
+          }
+        }
+      });
+      set({
+        history: [...get().history, { nodes, edges }],
+        nodes: nextNodes,
+        edges: nextEdges,
+      });
+    },
     getNodeID: (type) => {
         const newIDs = {...get().nodeIDs};
         if (newIDs[type] === undefined) {
@@ -46,17 +105,10 @@ export const useStore = create((set, get) => ({
       set({
         edges: addEdge({
           ...connection,
-          type: 'smoothstep',
-          animated: true,
-          className: 'glowing-edge',
-          style: {
-            stroke: 'var(--node-accent, #8b8cf8)',
-            strokeWidth: 2,
-            strokeDasharray: '4 4',
-          },
+          type: 'pipeline',
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            color: 'var(--node-accent, #8b8cf8)',
+            color: 'var(--border-2)',
             height: '16px',
             width: '16px'
           }
@@ -73,13 +125,9 @@ export const useStore = create((set, get) => ({
     },
     updateNodeField: (nodeId, fieldName, fieldValue) => {
       set({
-        nodes: get().nodes.map((node) => {
-          if (node.id === nodeId) {
-            node.data = { ...node.data, [fieldName]: fieldValue };
-          }
-  
-          return node;
-        }),
+        nodes: get().nodes.map((node) => node.id === nodeId
+          ? { ...node, data: { ...node.data, [fieldName]: fieldValue } }
+          : node),
       });
     },
   }));
