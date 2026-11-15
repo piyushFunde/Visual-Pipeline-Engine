@@ -81,7 +81,6 @@ export const BaseNode = ({
           <strong>{label}</strong>
           <small title={String(subtitle)}>{String(subtitle)}</small>
         </span>
-        {values.warning ? <span className="pipeline-node__warning" aria-label="Needs attention">!</span> : null}
       </div>
       <div className="pipeline-node__footer">
         <span>{values.nodeType || label}</span>
