@@ -1,23 +1,23 @@
 // pages/AuthPage.js
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Check, Circle, LogIn, SquareAsterisk } from 'lucide-react';
+import {
+  Check, Circle, Eye, EyeOff, Chrome, Square,
+  FileText, Search, Zap, GitBranch
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import * as authApi from '../services/authApi';
 import './AuthPage.css';
 
-/* ─── Pipeline-node logo (matches App.js VPEMark) ─── */
+/* ─── Logo mark (pipeline icon) ─── */
 function VPEMark() {
   return (
-    <svg viewBox="0 0 32 32" aria-hidden="true" className="auth-logo-mark" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="1" y="4"  width="10" height="8" rx="1.5" />
-      <rect x="1" y="20" width="10" height="8" rx="1.5" />
-      <rect x="21" y="12" width="10" height="8" rx="1.5" />
-      <path d="M11,8 C17,8 17,16 21,16" />
-      <path d="M11,24 C17,24 17,16 21,16" />
-      <circle cx="11" cy="8"  r="2" fill="currentColor" stroke="none" />
-      <circle cx="11" cy="24" r="2" fill="currentColor" stroke="none" />
-      <circle cx="21" cy="16" r="2" fill="currentColor" stroke="none" />
+    <svg viewBox="0 0 32 32" aria-hidden="true" className="auth-logo-mark" fill="none">
+      <rect x="2" y="6" width="9" height="7" rx="2" stroke="currentColor" strokeWidth="1.6" />
+      <rect x="2" y="19" width="9" height="7" rx="2" stroke="currentColor" strokeWidth="1.6" />
+      <rect x="21" y="12.5" width="9" height="7" rx="2" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M11 9.5 C16 9.5 16 16 21 16" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" fill="none" />
+      <path d="M11 22.5 C16 22.5 16 16 21 16" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" fill="none" />
     </svg>
   );
 }
@@ -40,7 +40,13 @@ function Toast({ message, onDone }) {
 function LeftPanel() {
   const [tab, setTab] = useState('build');
 
-  const buildSteps = ['Input node', 'Text node', 'Condition node', 'API node'];
+  const buildNodes = [
+    { label: 'Input', icon: <Zap size={11} strokeWidth={2} /> },
+    { label: 'Text', icon: <FileText size={11} strokeWidth={2} /> },
+    { label: 'Condition', icon: <GitBranch size={11} strokeWidth={2} /> },
+    { label: 'API', icon: <Circle size={11} strokeWidth={2} /> },
+  ];
+
   const runLog = [
     '✓ Input validated',
     '✓ Text formatted',
@@ -50,13 +56,13 @@ function LeftPanel() {
 
   return (
     <div className="auth-left" aria-hidden="true">
-      {/* logo */}
+      {/* logo top-left */}
       <Link to="/" className="auth-left-logo" tabIndex={-1}>
         <VPEMark />
         <span>VISUAL PIPELINE ENGINE</span>
       </Link>
 
-      {/* halftone orb */}
+      {/* halftone dot background */}
       <div className="auth-orb" />
 
       {/* sliding dot band */}
@@ -64,13 +70,14 @@ function LeftPanel() {
 
       {/* floating icon tiles */}
       <div className="auth-tile auth-tile--a">
-        <LogIn size={18} strokeWidth={1.5} />
+        <FileText size={17} strokeWidth={1.5} />
+        <span className="auth-tile-dash" />
       </div>
       <div className="auth-tile auth-tile--b">
-        <SquareAsterisk size={18} strokeWidth={1.5} />
+        <Search size={17} strokeWidth={1.5} />
       </div>
 
-      {/* sample card */}
+      {/* sample card – center of panel */}
       <div className="auth-sample-card">
         <div className="auth-sample-tabs">
           <button
@@ -91,8 +98,11 @@ function LeftPanel() {
 
         {tab === 'build' ? (
           <div className="auth-sample-nodes">
-            {buildSteps.map((s) => (
-              <span key={s} className="auth-node-chip">{s}</span>
+            {buildNodes.map(({ label, icon }) => (
+              <span key={label} className="auth-node-chip">
+                {icon}
+                {label}
+              </span>
             ))}
           </div>
         ) : (
@@ -102,17 +112,18 @@ function LeftPanel() {
             </div>
             <ul className="auth-run-log">
               {runLog.map((line, i) => (
-                <li key={i} style={{ animationDelay: `${i * 400}ms` }}>{line}</li>
+                <li key={i} style={{ animationDelay: `${i * 350}ms` }}>{line}</li>
               ))}
             </ul>
           </div>
         )}
+
         <p className="auth-sample-label">sample content</p>
       </div>
 
-      {/* headline */}
+      {/* headline bottom-left */}
       <p className="auth-left-headline">
-        Make it flow.<br />See the whole picture.
+        Every answer,<br />traced to its page.
       </p>
     </div>
   );
@@ -126,7 +137,7 @@ function Spinner() {
 /* ─── Main page ─── */
 export default function AuthPage() {
   const location = useLocation();
-  const navigate  = useNavigate();
+  const navigate = useNavigate();
   const { login: ctxLogin } = useAuth();
 
   const isSignup = location.pathname === '/signup';
@@ -139,10 +150,10 @@ export default function AuthPage() {
   const [marketing, setMarketing] = useState(true);
 
   /* UI state */
-  const [errors,   setErrors]   = useState({});   // { email, password, server }
-  const [loading,  setLoading]  = useState(false);
-  const [success,  setSuccess]  = useState(false);
-  const [toast,    setToast]    = useState(null);
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [toast, setToast] = useState(null);
 
   /* clear per-field error on change */
   const handleEmail = (e) => {
@@ -251,26 +262,15 @@ export default function AuthPage() {
             {/* success check */}
             {success && (
               <div className="auth-success-check" aria-label="Success">
-                <Check size={28} strokeWidth={2.5} />
+                <Check size={26} strokeWidth={2.5} />
               </div>
             )}
 
             <form onSubmit={handleSubmit} noValidate className="auth-form">
-              {/* marketing opt-in (signup only) */}
-              {isSignup && (
-                <label className="auth-checkbox-label auth-stagger">
-                  <input
-                    type="checkbox"
-                    checked={marketing}
-                    onChange={(e) => setMarketing(e.target.checked)}
-                    className="auth-checkbox"
-                  />
-                  Send me tips, updates and offers
-                </label>
-              )}
 
+              {/* full name (signup only) */}
               {isSignup && (
-                <div className={`auth-field${errors.name ? ' auth-field--error' : ''}`}>
+                <div className={`auth-field auth-stagger${errors.name ? ' auth-field--error' : ''}`}>
                   <label className="auth-label" htmlFor="auth-name">Full name</label>
                   <input
                     id="auth-name"
@@ -293,14 +293,14 @@ export default function AuthPage() {
               )}
 
               {/* email */}
-              <div className={`auth-field${errors.email ? ' auth-field--error' : ''}`}>
+              <div className={`auth-field auth-stagger${errors.email ? ' auth-field--error' : ''}`}>
                 <label className="auth-label" htmlFor="auth-email">Email</label>
                 <input
                   id="auth-email"
                   type="email"
                   autoComplete="email"
                   className="auth-input"
-                  placeholder="you@example.com"
+                  placeholder="Enter your email"
                   value={email}
                   onChange={handleEmail}
                   aria-describedby={errors.email ? 'auth-email-err' : undefined}
@@ -314,7 +314,7 @@ export default function AuthPage() {
               </div>
 
               {/* password */}
-              <div className={`auth-field${errors.password ? ' auth-field--error' : ''}`}>
+              <div className={`auth-field auth-stagger${errors.password ? ' auth-field--error' : ''}`}>
                 <label className="auth-label" htmlFor="auth-password">Password</label>
                 <div className="auth-pw-wrap">
                   <input
@@ -322,7 +322,7 @@ export default function AuthPage() {
                     type={showPw ? 'text' : 'password'}
                     autoComplete={isSignup ? 'new-password' : 'current-password'}
                     className="auth-input"
-                    placeholder={isSignup ? 'At least 8 characters' : '••••••••'}
+                    placeholder={isSignup ? 'At least 8 characters' : 'At least 8 characters'}
                     value={password}
                     onChange={handlePassword}
                     aria-describedby={errors.password ? 'auth-pw-err' : undefined}
@@ -334,7 +334,10 @@ export default function AuthPage() {
                     onClick={() => setShowPw((v) => !v)}
                     aria-label={showPw ? 'Hide password' : 'Show password'}
                   >
-                    <Circle size={16} strokeWidth={1.5} aria-hidden="true" />
+                    {showPw
+                      ? <EyeOff size={16} strokeWidth={1.5} aria-hidden="true" />
+                      : <Eye size={16} strokeWidth={1.5} aria-hidden="true" />
+                    }
                   </button>
                 </div>
                 {errors.password && (
@@ -346,6 +349,19 @@ export default function AuthPage() {
                   <a href="#forgot" className="auth-forgot">Forgot password?</a>
                 )}
               </div>
+
+              {/* marketing opt-in (signup only) */}
+              {isSignup && (
+                <label className="auth-checkbox-label auth-stagger">
+                  <input
+                    type="checkbox"
+                    checked={marketing}
+                    onChange={(e) => setMarketing(e.target.checked)}
+                    className="auth-checkbox"
+                  />
+                  Send me tips, updates and offers
+                </label>
+              )}
 
               {/* terms (signup only) */}
               {isSignup && (
@@ -385,7 +401,7 @@ export default function AuthPage() {
                   className="auth-btn-oauth"
                   onClick={() => handleOAuth('Google')}
                 >
-                  <Circle size={16} strokeWidth={1.5} aria-hidden="true" />
+                  <Circle size={15} strokeWidth={1.5} aria-hidden="true" />
                   Continue with Google
                 </button>
                 <button
@@ -393,7 +409,7 @@ export default function AuthPage() {
                   className="auth-btn-oauth"
                   onClick={() => handleOAuth('Microsoft')}
                 >
-                  <SquareAsterisk size={16} strokeWidth={1.5} aria-hidden="true" />
+                  <Square size={15} strokeWidth={1.5} aria-hidden="true" />
                   Continue with Microsoft
                 </button>
               </div>
@@ -422,4 +438,3 @@ export default function AuthPage() {
     </div>
   );
 }
-
