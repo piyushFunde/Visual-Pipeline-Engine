@@ -406,7 +406,7 @@ export const PipelineUI = ({ onBack, onLogout }) => {
           </button>
           <Workflow size={19} aria-hidden="true" />
           <div className="pipeline-brand__titles">
-            <span>PipeCanvas / Projects</span>
+            <span>Replayflow / Projects</span>
             <strong>Support triage</strong>
           </div>
         </div>

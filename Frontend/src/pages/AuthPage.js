@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Check, Circle, Eye, EyeOff, Chrome, Square,
+  Check, Circle, Eye, EyeOff, Square,
   FileText, Search, Zap, GitBranch
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -59,7 +59,7 @@ function LeftPanel() {
       {/* logo top-left */}
       <Link to="/" className="auth-left-logo" tabIndex={-1}>
         <VPEMark />
-        <span>VISUAL PIPELINE ENGINE</span>
+        <span>REPLAYFLOW</span>
       </Link>
 
       {/* halftone dot background */}

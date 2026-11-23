@@ -66,7 +66,7 @@ const workflowNodes = [
 
 function WorkflowPreview() {
   return (
-    <div className="workflow-preview" aria-label="Preview of a connected Visual Pipeline Engine workflow">
+    <div className="workflow-preview" aria-label="Preview of a connected Replayflow workflow">
       <div className="preview-window-bar">
         <div className="preview-window-dots" aria-hidden="true"><i /><i /><i /></div>
         <span>New workflow</span>
@@ -164,9 +164,9 @@ function LandingPage() {
   return (
     <div className="landing-page" id="home">
       <header className="site-header">
-        <a className="brand" href="#home" aria-label="Visual Pipeline Engine home">
+        <a className="brand" href="#home" aria-label="Replayflow home">
           <VPEMark />
-          <span>Visual Pipeline Engine</span>
+          <span>Replayflow</span>
         </a>
         <nav className="site-nav" aria-label="Main navigation">
           <a href="#home">Home</a>
@@ -231,7 +231,7 @@ function LandingPage() {
             </Reveal>
           </div>
           <Reveal as="p" className="intro-description" delay={180}>
-            Visual Pipeline Engine gives every part of your process a place. Add the pieces, connect the logic, and see how your workflow comes together before you run a simulated flow.
+            Replayflow gives every part of your process a place. Add the pieces, connect the logic, and see how your workflow comes together before you run a simulated flow.
           </Reveal>
           <div className="feature-grid">
             <Reveal as="article" className="feature-card" delay={0}>
@@ -308,16 +308,42 @@ function LandingPage() {
           <p className="eyebrow"><span className="eyebrow-line" aria-hidden="true" /> YOUR NEXT IDEA STARTS HERE</p>
           <h2>Ready to make<br /><em>things flow?</em></h2>
           <button className="button button-light" type="button" onClick={goToEditor}>
-            Open Visual Pipeline Engine <ArrowUpRight size={16} strokeWidth={1.8} aria-hidden="true" />
+            Open Replayflow <ArrowUpRight size={16} strokeWidth={1.8} aria-hidden="true" />
           </button>
           <div className="contact-decoration" aria-hidden="true"><span /><span /><span /></div>
         </Reveal>
       </main>
 
-      <footer className="site-footer">
-        <a className="brand footer-brand" href="#home"><VPEMark /><span>Visual Pipeline Engine</span></a>
-        <p>A clearer way to build what comes next.</p>
-        <div className="footer-bottom"><span>© 2026 Visual Pipeline Engine</span><a href="#home">Back to top ↑</a><span>Made for ideas in motion.</span></div>
+      <footer className="site-footer" id="contact">
+        <h2>GET IN TOUCH</h2>
+        <div className="footer-columns">
+          <div className="footer-column">
+            <strong>Explore</strong>
+            <a href="#home">Home</a>
+            <a href="#product">Product</a>
+            <a href="#home">How it works</a>
+            <a href="#home">Roadmap</a>
+          </div>
+          <div className="footer-column">
+            <strong>Use cases</strong>
+            <a href="#use-cases">Due diligence</a>
+            <a href="#use-cases">IC memos</a>
+            <a href="#use-cases">LP reporting</a>
+            <a href="#use-cases">Portfolio review</a>
+          </div>
+          <div className="footer-column">
+            <strong>Trust</strong>
+            <a href="#home">Security</a>
+            <a href="#home">Permissions</a>
+            <a href="#home">FAQ</a>
+          </div>
+          <div className="footer-column footer-contact">
+            <strong>Contact</strong>
+            <a href="#contact">Request a demo</a>
+            <label><span>[YOUR EMAIL]</span><input type="email" aria-label="Your email" /></label>
+            <label><span>[YOUR LINKEDIN]</span><input type="text" aria-label="Your LinkedIn" /></label>
+          </div>
+        </div>
       </footer>
     </div>
   );
