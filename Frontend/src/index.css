@@ -1708,7 +1708,7 @@ a:focus-visible {
   letter-spacing: 0.13em;
 }
 
-@keyframes vpe-fade-up {
+@keyframes replayflow-fade-up {
   from {
     opacity: 0;
     transform: translateY(22px);
@@ -1724,7 +1724,7 @@ a:focus-visible {
 .hero-copy > *,
 .hero-art,
 .hero-index {
-  animation: vpe-fade-up 750ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: replayflow-fade-up 750ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
 .site-header > :nth-child(2) {
@@ -2900,4 +2900,109 @@ a:focus-visible {
   }
 
   .pipeline-edge-dot { display: none; }
+}
+
+/* Pipeline Loader Modal */
+.pipeline-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.pipeline-modal {
+  background: #181d28;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #e2e8f0;
+}
+
+.pipeline-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pipeline-modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.pipeline-modal-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+
+.pipeline-modal-close:hover {
+  color: #ffffff;
+}
+
+.pipeline-modal-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+}
+
+.pipeline-modal-empty {
+  color: #94a3b8;
+  font-size: 14px;
+  text-align: center;
+  padding: 24px 0;
+}
+
+.pipeline-modal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pipeline-modal-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.pipeline-modal-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.pipeline-modal-item strong {
+  display: block;
+  font-size: 14px;
+  color: #f1f5f9;
+}
+
+.pipeline-modal-item small {
+  font-size: 12px;
+  color: #94a3b8;
 }

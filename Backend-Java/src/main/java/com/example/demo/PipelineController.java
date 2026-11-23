@@ -2,6 +2,8 @@ package com.example.demo;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -37,13 +39,16 @@ public class PipelineController {
     }
 
     @PostMapping("/pipelines/save")
-    public Map<String, Object> savePipeline(@RequestParam("pipeline") String pipeline) {
+    public Map<String, Object> savePipeline(@RequestParam("pipeline") String pipeline,
+                                            HttpServletRequest request) {
         Map<String, Object> response = new HashMap<>();
         try {
             JsonNode root = mapper.readTree(pipeline);
             String nodes = root.get("nodes").toString();
             String edges = root.get("edges").toString();
-            PipelineEntity entity = new PipelineEntity(nodes, edges);
+            HttpSession session = request.getSession(false);
+            Long accountId = (session != null && session.getAttribute("accountId") instanceof Long id) ? id : null;
+            PipelineEntity entity = new PipelineEntity(accountId, nodes, edges);
             pipelineRepository.save(entity);
             response.put("status", "success");
             response.put("id", entity.getId());
@@ -55,7 +60,11 @@ public class PipelineController {
     }
 
     @GetMapping("/pipelines")
-    public List<PipelineEntity> getPipelines() {
+    public List<PipelineEntity> getPipelines(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute("accountId") instanceof Long accountId) {
+            return pipelineRepository.findByAccountId(accountId);
+        }
         return pipelineRepository.findAll();
     }
 

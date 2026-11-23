@@ -58,6 +58,49 @@ class PipelineFeatureMockMvcTests {
     }
 
     @Test
+    void transitiveConditionBranchSkippingCascadesDownstream() throws Exception {
+        String graph = """
+                {"nodes":[
+                  {"id":"input","type":"customInput","data":{"inputName":"request"}},
+                  {"id":"condition","type":"condition","data":{"condition":true}},
+                  {"id":"true-step","type":"text","data":{"text":"active branch"}},
+                  {"id":"false-step1","type":"text","data":{"text":"skipped 1"}},
+                  {"id":"false-step2","type":"text","data":{"text":"skipped 2"}},
+                  {"id":"false-step3","type":"text","data":{"text":"skipped 3"}},
+                  {"id":"output","type":"customOutput","data":{}}
+                ],"edges":[
+                  {"id":"e1","source":"input","target":"condition"},
+                  {"id":"e2","source":"condition","sourceHandle":"true","target":"true-step"},
+                  {"id":"e3","source":"condition","sourceHandle":"false","target":"false-step1"},
+                  {"id":"e4","source":"false-step1","target":"false-step2"},
+                  {"id":"e5","source":"false-step2","target":"false-step3"},
+                  {"id":"e6","source":"true-step","target":"output"},
+                  {"id":"e7","source":"false-step3","target":"output"}
+                ]}
+                """;
+        JsonNode response = mapper.readTree(mockMvc.perform(post("/pipelines/execute")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("pipeline", graph))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        long runId = response.path("runId").asLong();
+
+        JsonNode run = mapper.readTree(mockMvc.perform(get("/runs/{id}", runId))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+
+        for (JsonNode step : run.path("steps")) {
+            String nodeId = step.path("nodeId").asText();
+            if (nodeId.startsWith("false-step")) {
+                assertThat(step.path("status").asText())
+                        .withFailMessage("Expected " + nodeId + " to be SKIPPED transitively")
+                        .isEqualTo("SKIPPED");
+            }
+            if ("true-step".equals(nodeId) || "output".equals(nodeId) || "input".equals(nodeId)) {
+                assertThat(step.path("status").asText()).isEqualTo("DONE");
+            }
+        }
+    }
+
+    @Test
     void validationReportsIssuesAndEstimateIsExplicitlyLabeled() throws Exception {
         String graph = """
                 {"nodes":[

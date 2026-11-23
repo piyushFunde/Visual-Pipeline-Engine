@@ -1,7 +1,7 @@
-# PieCanvas
+# Replayflow
 
 ## Overview
-PieCanvas is a full-stack workflow studio that lets users build, save, load, validate, and execute directed pipelines using a drag-and-drop node editor.
+Replayflow is a full-stack workflow studio that lets users build, save, load, validate, and execute directed pipelines using a drag-and-drop node editor.
 Its responsive landing page introduces the product and links directly to the React Flow canvas. The Spring Boot backend provides DAG validation, pipeline persistence with an H2 in-memory database, and a simulated execution engine.
 
 ## Architecture Diagram
@@ -10,7 +10,7 @@ Its responsive landing page introduces the product and links directly to the Rea
 
 ## What’s Included
 - Drag-and-drop pipeline building interface
-- Responsive PieCanvas landing page with direct access to the editor
+- Responsive Replayflow landing page with direct access to the editor
 - Save/load pipeline persistence with Spring Data JPA + H2
 - Backend DAG validation and topological execution order
 - Upstream-aware execution with condition branches and persistent run/step history

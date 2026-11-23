@@ -114,7 +114,7 @@ function WorkflowPreview() {
 }
 
 /* Pipeline-node logo: two inputs merging into one output */
-function VPEMark() {
+function ReplayflowMark() {
   return (
     <svg viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       {/* top-left input node */}
@@ -165,7 +165,7 @@ function LandingPage() {
     <div className="landing-page" id="home">
       <header className="site-header">
         <a className="brand" href="#home" aria-label="Replayflow home">
-          <VPEMark />
+          <ReplayflowMark />
           <span>Replayflow</span>
         </a>
         <nav className="site-nav" aria-label="Main navigation">

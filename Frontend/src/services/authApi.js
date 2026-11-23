@@ -29,6 +29,11 @@ export function login({ email, password }) {
   return request('/auth/login', { email, password });
 }
 
+/** POST /auth/logout */
+export function logout() {
+  return request('/auth/logout', {});
+}
+
 /** GET /auth/me – restore session */
 export async function getMe() {
   const res = await fetch(`${BASE}/auth/me`, {
