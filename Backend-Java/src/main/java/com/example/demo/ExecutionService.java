@@ -9,15 +9,18 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
 public class ExecutionService {
     private static final Pattern COMPARISON = Pattern.compile("^\\s*([\\w.-]+)\\s*(>=|<=|==|!=|>|<)\\s*(.*?)\\s*$");
+    private static final Pattern TEMPLATE_PATTERN = Pattern.compile("\\{\\{\\s*([\\w.-]+)\\s*}}");
 
     private final ObjectMapper mapper;
     private final LlmClient llmClient;
@@ -40,6 +43,7 @@ public class ExecutionService {
         List<Map<String, Object>> executionLog = new ArrayList<>();
         Map<String, Map<String, Object>> outputs = new HashMap<>();
         Map<String, String> branches = new HashMap<>();
+        Set<String> skippedNodes = new HashSet<>();
         Map<String, JsonNode> nodes = new LinkedHashMap<>();
         List<JsonNode> edges = new ArrayList<>();
         boolean hadError = false;
@@ -67,7 +71,10 @@ public class ExecutionService {
 
                 String type = node.path("type").asText("unknown");
                 Map<String, Object> inputs = collectInputs(nodeId, edges, branches, outputs, suppliedInputs);
-                boolean skipped = shouldSkip(nodeId, edges, branches);
+                boolean skipped = shouldSkip(nodeId, edges, branches, skippedNodes);
+                if (skipped) {
+                    skippedNodes.add(nodeId);
+                }
                 // Node work is timed independently from graph traversal and database writes.
                 long stepStarted = System.nanoTime();
                 String status = skipped ? "SKIPPED" : "DONE";
@@ -209,7 +216,8 @@ public class ExecutionService {
         return inputs;
     }
 
-    private boolean shouldSkip(String nodeId, List<JsonNode> edges, Map<String, String> branches) {
+    private boolean shouldSkip(String nodeId, List<JsonNode> edges, Map<String, String> branches,
+                               Set<String> skippedNodes) {
         boolean hasIncoming = false;
         for (JsonNode edge : edges) {
             if (!nodeId.equals(edge.path("target").asText())) {
@@ -218,9 +226,14 @@ public class ExecutionService {
             hasIncoming = true;
             String source = edge.path("source").asText();
             String handle = normalizeHandle(edge.path("sourceHandle").asText(""), source);
-            // A target is skipped only when every incoming edge was ruled out by a branch.
-            if (!branches.containsKey(source) || (!"true".equals(handle) && !"false".equals(handle))
-                    || branches.get(source).equals(handle)) {
+
+            boolean isUntakenBranch = branches.containsKey(source)
+                    && ("true".equals(handle) || "false".equals(handle))
+                    && !branches.get(source).equals(handle);
+            boolean isSourceSkipped = skippedNodes.contains(source);
+
+            // An incoming path is viable only if not ruled out by a condition branch and not skipped
+            if (!isUntakenBranch && !isSourceSkipped) {
                 return false;
             }
         }
@@ -300,7 +313,7 @@ public class ExecutionService {
 
     private String interpolate(String template, Map<String, Object> inputs) {
         String result = template;
-        Matcher matcher = Pattern.compile("\\{\\{\\s*([\\w.-]+)\\s*}}").matcher(template);
+        Matcher matcher = TEMPLATE_PATTERN.matcher(template);
         while (matcher.find()) {
             Object value = findInputValue(matcher.group(1), inputs);
             result = result.replace(matcher.group(), value == null ? "" : value.toString());

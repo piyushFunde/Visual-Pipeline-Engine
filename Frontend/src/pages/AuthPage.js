@@ -10,7 +10,7 @@ import * as authApi from '../services/authApi';
 import './AuthPage.css';
 
 /* ─── Logo mark (pipeline icon) ─── */
-function VPEMark() {
+function ReplayflowMark() {
   return (
     <svg viewBox="0 0 32 32" aria-hidden="true" className="auth-logo-mark" fill="none">
       <rect x="2" y="6" width="9" height="7" rx="2" stroke="currentColor" strokeWidth="1.6" />
@@ -58,7 +58,7 @@ function LeftPanel() {
     <div className="auth-left" aria-hidden="true">
       {/* logo top-left */}
       <Link to="/" className="auth-left-logo" tabIndex={-1}>
-        <VPEMark />
+        <ReplayflowMark />
         <span>REPLAYFLOW</span>
       </Link>
 

@@ -11,8 +11,8 @@
 	<groupId>com.example</groupId>
 	<artifactId>demo</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
+	<name>Replayflow</name>
+	<description>Replayflow - Visual Workflow Studio Engine</description>
 	<url/>
 	<licenses>
 		<license/>

@@ -99,6 +99,15 @@ public class AuthController {
                 .orElseGet(() -> error(HttpStatus.UNAUTHORIZED, "Not authenticated."));
     }
 
+    @PostMapping("/auth/logout")
+    public ResponseEntity<Map<String, Object>> logout(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        return ResponseEntity.ok(Map.of("status", "success", "message", "Logged out successfully."));
+    }
+
     private static void establishSession(HttpServletRequest request, AccountEntity account) {
         HttpSession existingSession = request.getSession(false);
         if (existingSession != null) {

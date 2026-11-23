@@ -36,6 +36,7 @@ import {
   createTestFromRun,
   estimatePipeline,
   executePipeline,
+  getPipelines,
   getRun,
   getTestCases,
   loadPipeline,
@@ -121,6 +122,8 @@ export const PipelineUI = ({ onBack, onLogout }) => {
   const [error, setError] = useState('');
   const [focusedNode, setFocusedNode] = useState('');
   const [fixedIssues, setFixedIssues] = useState([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pipelineList, setPipelineList] = useState([]);
   const {
     nodes, edges, nodeIDs, getNodeID, addNode, onNodesChange, onEdgesChange, onConnect,
     currentRun, replayIndex, playing, speed, setCurrentRun, setReplayIndex, setPlaying,
@@ -287,22 +290,38 @@ export const PipelineUI = ({ onBack, onLogout }) => {
     }
   };
 
-  const load = async () => {
+  const openPicker = async () => {
     setBusy('load');
     try {
-      const result = await loadPipeline(1);
-      if (result.status !== 'success') throw new Error(result.message || 'Pipeline not found.');
-      suppressUnsavedRef.current = true;
-      setNodes(safeJson(result.nodes));
-      setEdges(safeJson(result.edges));
-      setPipelineId(1);
-      setToast('Pipeline loaded');
+      const list = await getPipelines();
+      setPipelineList(Array.isArray(list) ? list : []);
+      setPickerOpen(true);
     } catch (requestError) {
       setError(requestError.message);
     } finally {
       setBusy('');
     }
   };
+
+  const loadById = async (targetId) => {
+    setBusy('load');
+    try {
+      const result = await loadPipeline(targetId);
+      if (result.status !== 'success') throw new Error(result.message || 'Pipeline not found.');
+      suppressUnsavedRef.current = true;
+      setNodes(safeJson(result.nodes));
+      setEdges(safeJson(result.edges));
+      setPipelineId(targetId);
+      setToast(`Pipeline #${targetId} loaded`);
+      setPickerOpen(false);
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const load = openPicker;
 
   const run = async () => {
     setBusy('run');
@@ -678,6 +697,45 @@ export const PipelineUI = ({ onBack, onLogout }) => {
           <div className="replay-empty replay-empty--idle">Press Run to record a sample run and review each node’s input and output.</div>
         )}
       </section>
+      {pickerOpen ? (
+        <div className="pipeline-modal-backdrop" onClick={() => setPickerOpen(false)}>
+          <div className="pipeline-modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="picker-title">
+            <div className="pipeline-modal-header">
+              <h3 id="picker-title">Load Saved Pipeline</h3>
+              <button type="button" className="pipeline-modal-close" onClick={() => setPickerOpen(false)} aria-label="Close dialog">×</button>
+            </div>
+            <div className="pipeline-modal-body">
+              {pipelineList.length === 0 ? (
+                <p className="pipeline-modal-empty">No saved pipelines found. Save your current canvas to create one.</p>
+              ) : (
+                <ul className="pipeline-modal-list">
+                  {pipelineList.map((pipe) => {
+                    const nodesList = safeJson(pipe.nodesJson);
+                    const edgesList = safeJson(pipe.edgesJson);
+                    const nodeCount = Array.isArray(nodesList) ? nodesList.length : 0;
+                    const edgeCount = Array.isArray(edgesList) ? edgesList.length : 0;
+                    return (
+                      <li key={pipe.id} className="pipeline-modal-item">
+                        <div>
+                          <strong>Pipeline #{pipe.id}</strong>
+                          <small>{nodeCount} nodes • {edgeCount} connections</small>
+                        </div>
+                        <button
+                          type="button"
+                          className="pipeline-button pipeline-button--small pipeline-button--accent"
+                          onClick={() => loadById(pipe.id)}
+                        >
+                          Load
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
       {toast ? <div className="pipeline-toast" role="status">{toast}</div> : null}
     </main>
   );

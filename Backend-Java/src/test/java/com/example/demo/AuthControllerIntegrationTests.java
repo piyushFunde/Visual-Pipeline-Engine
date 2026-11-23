@@ -66,6 +66,11 @@ class AuthControllerIntegrationTests {
                 currentAccount.getResponse().getContentAsString(), new TypeReference<>() {});
         assertThat(currentAccountBody).containsEntry("email", email);
         assertThat(currentAccountBody).containsEntry("name", name);
+
+        mockMvc.perform(post("/auth/logout").session(session))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/auth/me").session(session))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

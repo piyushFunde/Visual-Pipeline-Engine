@@ -1,6 +1,6 @@
 // context/AuthContext.js
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { getMe } from '../services/authApi';
+import { getMe, logout as apiLogout } from '../services/authApi';
 
 const AuthContext = createContext(null);
 
@@ -20,7 +20,12 @@ export function AuthProvider({ children }) {
     setUser(userData);
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      await apiLogout();
+    } catch {
+      // Ignore network errors on logout
+    }
     setUser(null);
   }, []);
 

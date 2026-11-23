@@ -86,7 +86,21 @@ export const useStore = create((set, get) => ({
         });
     },
     setNodes: (nodes) => {
-        set({ nodes });
+        const nextNodes = Array.isArray(nodes) ? nodes : [];
+        const newIDs = { ...get().nodeIDs };
+        nextNodes.forEach((node) => {
+            const type = node.type || node.data?.nodeType;
+            if (type && node.id) {
+                const match = String(node.id).match(/-(\d+)$/);
+                if (match) {
+                    const num = parseInt(match[1], 10);
+                    if (!isNaN(num)) {
+                        newIDs[type] = Math.max(newIDs[type] || 0, num);
+                    }
+                }
+            }
+        });
+        set({ nodes: nextNodes, nodeIDs: newIDs });
     },
     setEdges: (edges) => {
         set({ edges });
