@@ -1,17 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactFlow, { Background, Controls, MiniMap } from 'reactflow';
 import { shallow } from 'zustand/shallow';
+import { useParams } from 'react-router-dom';
 import {
   ArrowLeft,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Code2,
   Database,
   GitBranch,
   Globe,
   LoaderCircle,
   LogIn,
   LogOut,
+  MessageSquare,
   Pause,
+  Pencil,
   Play,
   Plus,
   RotateCcw,
@@ -42,6 +47,7 @@ import {
   loadPipeline,
   runTestCases,
   savePipeline,
+  updatePipeline,
   validatePipeline,
 } from './services/pipelineApi';
 
@@ -106,12 +112,72 @@ function severityClass(severity) {
   return String(severity || 'info').toLowerCase();
 }
 
+function DeployModal({ pipelineId, onClose }) {
+  const [tab, setTab] = useState('chatbot');
+  const chatUrl = `http://localhost:3000/chat/${pipelineId || '{id}'}`;
+  const curlSnippet = `curl -X POST http://localhost:8081/api/v1/pipelines/${pipelineId || '{id}'}/execute \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{"inputs": {"request": "My question"}}'`;
+  const iframeSnippet = `<iframe src="${chatUrl}" width="100%" height="600px"></iframe>`;
+  const copy = (text) => { navigator.clipboard.writeText(text); };
+  return (
+    <div className="pipeline-modal-backdrop" onClick={onClose}>
+      <div className="pipeline-modal deploy-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+        <div className="pipeline-modal-header">
+          <h3>Deploy Workflow</h3>
+          <button type="button" className="pipeline-modal-close" onClick={onClose}>×</button>
+        </div>
+        <div className="deploy-tabs">
+          <button type="button" className={tab === 'chatbot' ? 'active' : ''} onClick={() => setTab('chatbot')}>
+            <MessageSquare size={14} /> Chatbot
+          </button>
+          <button type="button" className={tab === 'api' ? 'active' : ''} onClick={() => setTab('api')}>
+            <Code2 size={14} /> REST API
+          </button>
+        </div>
+        <div className="pipeline-modal-body">
+          {tab === 'chatbot' ? (
+            <>
+              <p className="deploy-desc">Embed this workflow as a chatbot on any website.</p>
+              <label className="deploy-label">Chatbot URL</label>
+              <div className="deploy-code-wrap">
+                <code>{chatUrl}</code>
+                <button type="button" onClick={() => copy(chatUrl)}>Copy</button>
+              </div>
+              <label className="deploy-label">Embed Snippet</label>
+              <div className="deploy-code-wrap">
+                <code>{iframeSnippet}</code>
+                <button type="button" onClick={() => copy(iframeSnippet)}>Copy</button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="deploy-desc">Call this workflow as a REST API from any application.</p>
+              <label className="deploy-label">cURL Example</label>
+              <div className="deploy-code-wrap deploy-code-wrap--tall">
+                <code>{curlSnippet}</code>
+                <button type="button" onClick={() => copy(curlSnippet)}>Copy</button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export const PipelineUI = ({ onBack, onLogout }) => {
+  const { pipelineId: routeId } = useParams();
   const wrapperRef = useRef(null);
   const flowInstanceRef = useRef(null);
   const suppressUnsavedRef = useRef(false);
   const [activeTab, setActiveTab] = useState('doctor');
-  const [pipelineId, setPipelineId] = useState(null);
+  const [pipelineId, setPipelineId] = useState(routeId && routeId !== 'new' ? Number(routeId) : null);
+  const [workflowTitle, setWorkflowTitle] = useState('Untitled Workflow');
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [deployOpen, setDeployOpen] = useState(false);
+  const [deployMenuOpen, setDeployMenuOpen] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
   const [doctor, setDoctor] = useState({ score: 100, issues: [] });
   const [estimate, setEstimate] = useState(null);
@@ -134,6 +200,22 @@ export const PipelineUI = ({ onBack, onLogout }) => {
   const runSteps = useMemo(() => currentRun?.steps || [], [currentRun]);
   const activeStep = replayIndex >= 0 && replayIndex < runSteps.length ? runSteps[replayIndex] : null;
   const scoreTone = doctor.score < 60 ? 'error' : doctor.score < 90 ? 'warning' : 'good';
+
+  // Load pipeline from route param on mount
+  useEffect(() => {
+    if (!routeId || routeId === 'new') return;
+    const id = Number(routeId);
+    if (isNaN(id)) return;
+    loadPipeline(id).then((result) => {
+      if (result.status !== 'success') return;
+      suppressUnsavedRef.current = true;
+      setNodes(safeJson(result.nodes));
+      setEdges(safeJson(result.edges));
+      setPipelineId(id);
+      if (result.name) setWorkflowTitle(result.name);
+    }).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeId]);
 
   useEffect(() => {
     if (suppressUnsavedRef.current) {
@@ -278,11 +360,17 @@ export const PipelineUI = ({ onBack, onLogout }) => {
   const save = async () => {
     setBusy('save');
     try {
-      const result = await savePipeline(graph);
-      if (result.status !== 'success') throw new Error(result.message || 'Pipeline could not be saved.');
-      setPipelineId(result.id);
-      setDraftSaved(true);
-      setToast('Draft saved');
+      if (pipelineId) {
+        await updatePipeline(pipelineId, { name: workflowTitle, nodes: graph.nodes, edges: graph.edges });
+        setDraftSaved(true);
+        setToast('Draft saved');
+      } else {
+        const result = await savePipeline(graph);
+        if (result.status !== 'success') throw new Error(result.message || 'Pipeline could not be saved.');
+        setPipelineId(result.id);
+        setDraftSaved(true);
+        setToast('Draft saved');
+      }
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -420,13 +508,27 @@ export const PipelineUI = ({ onBack, onLogout }) => {
     <main className="pipeline-shell">
       <header className="pipeline-topbar">
         <div className="pipeline-brand">
-          <button type="button" className="pipeline-back" aria-label="Back to home" onClick={onBack}>
+          <button type="button" className="pipeline-back" aria-label="Back to dashboard" onClick={onBack}>
             <ArrowLeft size={15} />
           </button>
           <Workflow size={19} aria-hidden="true" />
           <div className="pipeline-brand__titles">
-            <span>Replayflow / Projects</span>
-            <strong>Support triage</strong>
+            <span>Replayflow / Workflows</span>
+            {editingTitle ? (
+              <input
+                className="pipeline-title-input"
+                value={workflowTitle}
+                autoFocus
+                onChange={(e) => setWorkflowTitle(e.target.value)}
+                onBlur={() => setEditingTitle(false)}
+                onKeyDown={(e) => { if (e.key === 'Enter') setEditingTitle(false); }}
+              />
+            ) : (
+              <button type="button" className="pipeline-title-btn" onClick={() => setEditingTitle(true)}>
+                <strong>{workflowTitle}</strong>
+                <Pencil size={11} />
+              </button>
+            )}
           </div>
         </div>
         <div className="pipeline-topbar__actions">
@@ -448,6 +550,25 @@ export const PipelineUI = ({ onBack, onLogout }) => {
             {busy === 'run' ? <LoaderCircle className="spin" size={15} /> : <Play size={14} fill="currentColor" />}
             Run
           </button>
+          <div className="deploy-dropdown-wrap">
+            <button
+              type="button"
+              className="pipeline-button pipeline-button--deploy"
+              onClick={() => setDeployMenuOpen((v) => !v)}
+            >
+              Deploy <ChevronDown size={13} />
+            </button>
+            {deployMenuOpen && (
+              <div className="deploy-dropdown">
+                <button type="button" onClick={() => { setDeployOpen(true); setDeployMenuOpen(false); }}>
+                  <MessageSquare size={13} /> Embeddable Chatbot
+                </button>
+                <button type="button" onClick={() => { setDeployOpen(true); setDeployMenuOpen(false); }}>
+                  <Code2 size={13} /> REST API Endpoint
+                </button>
+              </div>
+            )}
+          </div>
           {onLogout ? <button type="button" className="pipeline-logout" onClick={onLogout}>Log out</button> : null}
         </div>
       </header>
@@ -736,6 +857,7 @@ export const PipelineUI = ({ onBack, onLogout }) => {
           </div>
         </div>
       ) : null}
+      {deployOpen ? <DeployModal pipelineId={pipelineId} onClose={() => setDeployOpen(false)} /> : null}
       {toast ? <div className="pipeline-toast" role="status">{toast}</div> : null}
     </main>
   );

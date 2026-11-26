@@ -10,13 +10,18 @@ public class PipelineEntity {
     private Long id;
 
     private Long accountId;
-    
+
+    private String name;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
     @Column(columnDefinition = "TEXT")
     private String nodesJson;
-    
+
     @Column(columnDefinition = "TEXT")
     private String edgesJson;
-    
+
     public PipelineEntity() {}
 
     public PipelineEntity(String nodesJson, String edgesJson) {
@@ -34,10 +39,16 @@ public class PipelineEntity {
 
     public Long getAccountId() { return accountId; }
     public void setAccountId(Long accountId) { this.accountId = accountId; }
-    
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
     public String getNodesJson() { return nodesJson; }
     public void setNodesJson(String nodesJson) { this.nodesJson = nodesJson; }
-    
+
     public String getEdgesJson() { return edgesJson; }
     public void setEdgesJson(String edgesJson) { this.edgesJson = edgesJson; }
 }
