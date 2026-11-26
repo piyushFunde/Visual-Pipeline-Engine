@@ -86,3 +86,32 @@ export async function createTestFromRun(pipelineId, runId) {
     credentials: 'include',
   }));
 }
+
+export async function updatePipeline(pipelineId, body) {
+  return parseResponse(await fetch(`${API_BASE}/pipelines/${pipelineId}`, {
+    method: 'PUT',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }));
+}
+
+export async function deletePipeline(pipelineId) {
+  return parseResponse(await fetch(`${API_BASE}/pipelines/${pipelineId}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  }));
+}
+
+export async function duplicatePipeline(pipelineId) {
+  return parseResponse(await fetch(`${API_BASE}/pipelines/${pipelineId}/duplicate`, {
+    method: 'POST',
+    credentials: 'include',
+  }));
+}
+
+export async function getTemplates() {
+  return parseResponse(await fetch(`${API_BASE}/templates`, {
+    credentials: 'include',
+  }));
+}

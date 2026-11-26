@@ -1,93 +1,76 @@
-// textNode.js
-
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Position, useUpdateNodeInternals } from 'reactflow';
-import { BaseNode } from './BaseNode';
+import { Type } from 'lucide-react';
+import { Handle } from 'reactflow';
 import { useStore } from '../store';
 
-export const TextNode = ({ id, data }) => {
-  const [currText, setCurrText] = useState(data?.text || '{{input}}');
-  const [variables, setVariables] = useState([]);
-  const textareaRef = useRef(null);
+export function TextNode({ id, data }) {
+  const update = useStore((s) => s.updateNodeField);
+  const removeNode = useStore((s) => s.removeNode);
   const updateNodeInternals = useUpdateNodeInternals();
-  const updateNodeField = useStore((state) => state.updateNodeField);
+  const [text, setText] = useState(data?.text ?? '{{input}}');
+  const [vars, setVars] = useState([]);
+  const ref = useRef(null);
+  const runStatus = data?.runStatus;
+
+  useEffect(() => { setText(data?.text ?? '{{input}}'); }, [data?.text]);
 
   useEffect(() => {
-    setCurrText(data?.text || '{{input}}');
-  }, [data?.text]);
-
-  useEffect(() => {
-    const matches = currText.match(/{{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*}}/g) || [];
-    const uniqueVars = [...new Set(matches.map((v) => v.replace(/[{}]/g, '').trim()))];
-    
-    if (JSON.stringify(uniqueVars) !== JSON.stringify(variables)) {
-        setVariables(uniqueVars);
-        updateNodeInternals(id);
-    }
-
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      const newHeight = Math.max(64, textareaRef.current.scrollHeight);
-      textareaRef.current.style.height = `${newHeight}px`;
+    const matches = text.match(/\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}/g) || [];
+    const unique = [...new Set(matches.map((v) => v.replace(/[{}]/g, '').trim()))];
+    if (JSON.stringify(unique) !== JSON.stringify(vars)) {
+      setVars(unique);
       updateNodeInternals(id);
     }
-
-    }, [currText, id, variables, updateNodeInternals]);
-
-
-  const handleTextChange = (e) => {
-    const nextValue = e.target.value;
-    setCurrText(nextValue);
-    updateNodeField(id, 'text', nextValue);
-  };
-
-  // Default output handle on the right
-  const handles = [
-    { type: 'source', position: Position.Right, id: 'output' }
-  ];
-
-  // Map extracted variables to dynamically generated handles on the left
-  variables.forEach((variable, index) => {
-    const spacing = 100 / (variables.length + 1);
-    handles.push({
-      type: 'target',
-      position: Position.Left,
-      id: variable,
-      style: { top: `${spacing * (index + 1)}%` }
-    });
-  });
+    if (ref.current) {
+      ref.current.style.height = 'auto';
+      ref.current.style.height = `${Math.max(64, ref.current.scrollHeight)}px`;
+    }
+  }, [text, id, vars, updateNodeInternals]);
 
   return (
-    <BaseNode id={id} label="Text" handles={handles}>
-      <label style={{ display: 'block' }}>
-        Text:
-        <textarea
-          ref={textareaRef}
-          value={currText}
-          onChange={handleTextChange}
-          placeholder='Type "{{" to utilize variables'
-          style={{
-            display: 'block',
-            marginTop: '5px',
-            boxSizing: 'border-box',
-            width: '100%',
-            resize: 'none',
-            overflow: 'hidden',
-            fontFamily: 'inherit',
-            fontSize: '14px',
-            padding: '10px 12px',
-            borderRadius: '6px',
-            border: '1px solid var(--border-select)',
-            whiteSpace: 'pre-wrap',
-            wordWrap: 'break-word',
-            backgroundColor: 'var(--bg-input)',
-            minHeight: '64px',
-            lineHeight: '1.4',
-            color: 'var(--text-input)',
-            transition: 'background 0.2s, color 0.2s'
-          }}
+    <div className={`vs-node${runStatus ? ` vs-node--${runStatus.toLowerCase()}` : ''}`}>
+      <div className="vs-node-header">
+        <div className="vs-node-header-left">
+          <span className="vs-node-icon"><Type size={15} /></span>
+          <span className="vs-node-title">Text</span>
+        </div>
+        <div className="vs-node-header-actions">
+          <button type="button" className="vs-node-action nodrag" onClick={() => removeNode(id)}>
+            <span style={{ fontSize: 14, lineHeight: 1 }}>✕</span>
+          </button>
+        </div>
+      </div>
+      <p className="vs-node-desc">Static or dynamic text with variable interpolation.</p>
+      <div className="vs-node-body nodrag">
+        <div className="vs-field-row">
+          <label className="vs-label">Template <span className="vs-badge vs-badge--accent">{'{{var}}'}</span></label>
+          <textarea
+            ref={ref}
+            className="vs-textarea nodrag"
+            value={text}
+            onChange={(e) => { setText(e.target.value); update(id, 'text', e.target.value); }}
+            placeholder='Type "{{" to use variables'
+            rows={3}
+          />
+        </div>
+        {vars.length > 0 && (
+          <div className="vs-var-chips">
+            {vars.map((v) => <span key={v} className="vs-var-chip">{'{{' + v + '}}'}</span>)}
+          </div>
+        )}
+      </div>
+      <Handle type="source" position={Position.Right} id="output" className="vs-handle" />
+      {vars.map((v, i) => (
+        <Handle
+          key={v}
+          type="target"
+          position={Position.Left}
+          id={v}
+          className="vs-handle"
+          style={{ top: `${((i + 1) / (vars.length + 1)) * 100}%` }}
         />
-      </label>
-    </BaseNode>
+      ))}
+    </div>
   );
 }

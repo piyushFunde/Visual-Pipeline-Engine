@@ -1,26 +1,67 @@
 import { Position } from 'reactflow';
-import { createNode } from './createNode';
+import { LogIn, Lightbulb } from 'lucide-react';
+import { Handle } from 'reactflow';
+import { useStore } from '../store';
 
-export const InputNode = createNode({
-  label: 'Input',
-  description: 'Pass data of different types into your workflow',
-  fields: [
-    {
-      name: 'inputName',
-      label: 'Name',
-      type: 'text',
-      defaultValue: 'input_0',
-    },
-    {
-      name: 'inputType',
-      label: 'Type',
-      type: 'select',
-      defaultValue: 'Text',
-      options: [
-        { label: 'Text', value: 'Text' },
-        { label: 'File', value: 'File' },
-      ],
-    },
-  ],
-  handles: [{ type: 'source', position: Position.Right, id: 'output' }],
-});
+export function InputNode({ id, data }) {
+  const update = useStore((s) => s.updateNodeField);
+  const removeNode = useStore((s) => s.removeNode);
+  const runStatus = data?.runStatus;
+
+  return (
+    <div className={`vs-node${runStatus ? ` vs-node--${runStatus.toLowerCase()}` : ''}`}>
+      <div className="vs-node-header">
+        <div className="vs-node-header-left">
+          <span className="vs-node-icon"><LogIn size={15} /></span>
+          <span className="vs-node-title">Input</span>
+        </div>
+        <div className="vs-node-header-actions">
+          <button type="button" className="vs-node-action nodrag" aria-label="Delete" onClick={() => removeNode(id)}>
+            <span style={{ fontSize: 14, lineHeight: 1 }}>✕</span>
+          </button>
+        </div>
+      </div>
+      <p className="vs-node-desc">Pass data of different types into your workflow</p>
+      <div className="vs-node-body nodrag">
+        {/* Name pill */}
+        <div className="vs-name-pill">{data?.inputName || 'input_0'}</div>
+
+        {/* Suggestion box */}
+        <div className="vs-suggestion">
+          <Lightbulb size={13} className="vs-suggestion-icon" />
+          <span><strong>Suggestion:</strong> Give the node a distinct name</span>
+        </div>
+
+        {/* Name field */}
+        <div className="vs-field-row">
+          <label className="vs-label">Name</label>
+          <input
+            className="vs-input nodrag"
+            type="text"
+            value={data?.inputName ?? 'input_0'}
+            onChange={(e) => update(id, 'inputName', e.target.value)}
+            placeholder="input_0"
+          />
+        </div>
+
+        {/* Type field */}
+        <div className="vs-field-row">
+          <label className="vs-label">Type <span className="vs-badge">Dropdown</span></label>
+          <div className="vs-select-wrap">
+            <select
+              className="vs-select nodrag"
+              value={data?.inputType ?? 'Text'}
+              onChange={(e) => update(id, 'inputType', e.target.value)}
+            >
+              <option value="Text">Text</option>
+              <option value="File">File</option>
+              <option value="JSON">JSON</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <Handle type="source" position={Position.Right} id="output" className="vs-handle" />
+    </div>
+  );
+}
