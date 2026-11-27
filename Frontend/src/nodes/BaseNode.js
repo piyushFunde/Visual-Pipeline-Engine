@@ -1,54 +1,65 @@
 import { Handle, Position } from 'reactflow';
-import { Maximize2, Settings, X } from 'lucide-react';
 import { useStore } from '../store';
 
-export const BaseNode = ({ id, label, icon: Icon, description = '', children, handles = [], values = {} }) => {
+export const BaseNode = ({
+  id,
+  label,
+  category = 'default',
+  icon: Icon,
+  description = '',
+  children,
+  handles = [],
+  values = {},
+}) => {
   const removeNode = useStore((s) => s.removeNode);
   const runStatus = values?.runStatus;
 
-  const borderColor = runStatus === 'DONE'    ? '#22c55e'
-                    : runStatus === 'ERROR'   ? '#ef4444'
-                    : runStatus === 'SKIPPED' ? '#94a3b8'
-                    : undefined; // default CSS var
-
   return (
-    <div className={`vs-node${runStatus ? ` vs-node--${runStatus.toLowerCase()}` : ''}`}
-      style={borderColor ? { borderColor } : undefined}>
-
-      {/* ── Header ── */}
-      <div className="vs-node-header">
+    <div className={`vs-node vs-node--${category}${runStatus ? ` vs-node--${runStatus.toLowerCase()}` : ''}`}>
+      <div className={`vs-node-header vs-node-header--${category}`}>
         <div className="vs-node-header-left">
-          {Icon && <span className="vs-node-icon"><Icon size={15} /></span>}
+          {Icon && <span className="vs-node-icon"><Icon size={14} /></span>}
           <span className="vs-node-title">{label}</span>
+          <span className="vs-node-id-chip">{id}</span>
         </div>
         <div className="vs-node-header-actions">
-          <button type="button" className="vs-node-action nodrag" aria-label="Expand"><Maximize2 size={12} /></button>
-          <button type="button" className="vs-node-action nodrag" aria-label="Settings"><Settings size={12} /></button>
-          <button type="button" className="vs-node-action vs-node-action--delete nodrag" aria-label="Delete" onClick={() => removeNode(id)}>
-            <X size={13} />
+          <button
+            type="button"
+            className="vs-node-action vs-node-action--delete nodrag"
+            aria-label="Delete node"
+            onClick={() => removeNode(id)}
+          >
+            ✕
           </button>
         </div>
       </div>
 
-      {/* ── Description ── */}
       {description && <p className="vs-node-desc">{description}</p>}
 
-      {/* ── Body ── */}
       <div className="vs-node-body nodrag">
         {children}
       </div>
 
-      {/* ── Handles ── */}
-      {handles.map((h, i) => (
-        <Handle
-          key={`${id}-${h.id || i}`}
-          type={h.type}
-          position={h.position}
-          id={h.id}
-          className="vs-handle"
-          style={h.style}
-        />
-      ))}
+      {handles.map((h, i) => {
+        const isLeft = h.position === Position.Left;
+        const rowClass = `vs-handle-row ${isLeft ? 'vs-handle-row--left' : 'vs-handle-row--right'}`;
+        const labelText = h.label || h.id;
+        return (
+          <div key={`${id}-${h.id || i}`} className={rowClass} style={h.style}>
+            {isLeft ? (
+              <>
+                {labelText && <span className="vs-handle-label">{labelText}</span>}
+                <Handle type={h.type} position={h.position} id={h.id} className="vs-handle" />
+              </>
+            ) : (
+              <>
+                <Handle type={h.type} position={h.position} id={h.id} className="vs-handle" />
+                {labelText && <span className="vs-handle-label">{labelText}</span>}
+              </>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };

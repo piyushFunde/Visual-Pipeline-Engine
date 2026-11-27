@@ -2,6 +2,12 @@ import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/extend-expect';
 
+jest.mock('react-router-dom', () => ({
+  useParams: () => ({}),
+  useNavigate: () => jest.fn(),
+  useLocation: () => ({ pathname: '/app' }),
+}));
+
 jest.mock('reactflow', () => {
   const mockReact = require('react');
   const ReactFlowMock = ({ nodes = [], children, onInit }) => {
@@ -21,6 +27,7 @@ jest.mock('reactflow', () => {
     __esModule: true,
     default: ReactFlowMock,
     Background: () => null,
+    BackgroundVariant: { Dots: 'dots', Lines: 'lines', Cross: 'cross' },
     Controls: () => null,
     MiniMap: () => null,
     Handle: () => null,

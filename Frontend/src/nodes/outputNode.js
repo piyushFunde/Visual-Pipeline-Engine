@@ -9,24 +9,23 @@ export function OutputNode({ id, data }) {
   const runStatus = data?.runStatus;
 
   return (
-    <div className={`vs-node${runStatus ? ` vs-node--${runStatus.toLowerCase()}` : ''}`}>
-      <div className="vs-node-header">
+    <div className={`vs-node vs-node--output${runStatus ? ` vs-node--${runStatus.toLowerCase()}` : ''}`}>
+      <div className="vs-node-header vs-node-header--output">
         <div className="vs-node-header-left">
-          <span className="vs-node-icon"><LogOut size={15} /></span>
+          <span className="vs-node-icon"><LogOut size={14} /></span>
           <span className="vs-node-title">Output</span>
+          <span className="vs-node-id-chip">{id}</span>
         </div>
         <div className="vs-node-header-actions">
-          <button type="button" className="vs-node-action nodrag" onClick={() => removeNode(id)}>
-            <span style={{ fontSize: 14, lineHeight: 1 }}>✕</span>
-          </button>
+          <button type="button" className="vs-node-action vs-node-action--delete nodrag" aria-label="Delete node" onClick={() => removeNode(id)}>✕</button>
         </div>
       </div>
+
       <p className="vs-node-desc">Output data of different types from your workflow.</p>
+
       <div className="vs-node-body nodrag">
-        {/* Name pill */}
         <div className="vs-name-pill">{data?.outputName || 'output_0'}</div>
 
-        {/* Type field */}
         <div className="vs-field-row">
           <label className="vs-label">Type <span className="vs-badge">Dropdown</span></label>
           <div className="vs-select-wrap">
@@ -42,9 +41,8 @@ export function OutputNode({ id, data }) {
           </div>
         </div>
 
-        {/* Output name field */}
         <div className="vs-field-row">
-          <label className="vs-label">Output <span className="vs-badge vs-badge--accent">Text</span></label>
+          <label className="vs-label">Output name <span className="vs-badge vs-badge--accent">Text</span></label>
           <input
             className="vs-input nodrag"
             type="text"
@@ -54,7 +52,6 @@ export function OutputNode({ id, data }) {
           />
         </div>
 
-        {/* Format output toggle */}
         <div className="vs-field-row vs-field-row--toggle">
           <label className="vs-label">Format output</label>
           <label className="vs-toggle nodrag">
@@ -68,7 +65,11 @@ export function OutputNode({ id, data }) {
         </div>
       </div>
 
-      <Handle type="target" position={Position.Left} id="value" className="vs-handle" />
+      {/* Labeled target handle on left */}
+      <div className="vs-handle-row vs-handle-row--left" style={{ top: '50%' }}>
+        <span className="vs-handle-label">value</span>
+        <Handle type="target" position={Position.Left} id="value" className="vs-handle" />
+      </div>
     </div>
   );
 }
