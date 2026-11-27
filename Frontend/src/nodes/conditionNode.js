@@ -14,19 +14,20 @@ export function ConditionNode({ id, data }) {
   };
 
   return (
-    <div className={`vs-node${runStatus ? ` vs-node--${runStatus.toLowerCase()}` : ''}`}>
-      <div className="vs-node-header">
+    <div className={`vs-node vs-node--condition${runStatus ? ` vs-node--${runStatus.toLowerCase()}` : ''}`}>
+      <div className="vs-node-header vs-node-header--condition">
         <div className="vs-node-header-left">
-          <span className="vs-node-icon"><GitBranch size={15} /></span>
+          <span className="vs-node-icon"><GitBranch size={14} /></span>
           <span className="vs-node-title">Condition</span>
+          <span className="vs-node-id-chip">{id}</span>
         </div>
         <div className="vs-node-header-actions">
-          <button type="button" className="vs-node-action nodrag" onClick={() => removeNode(id)}>
-            <span style={{ fontSize: 14, lineHeight: 1 }}>✕</span>
-          </button>
+          <button type="button" className="vs-node-action vs-node-action--delete nodrag" aria-label="Delete node" onClick={() => removeNode(id)}>✕</button>
         </div>
       </div>
+
       <p className="vs-node-desc">Branch your workflow using a conditional expression.</p>
+
       <div className="vs-node-body nodrag">
         <div className="vs-field-row">
           <label className="vs-label">Expression</label>
@@ -42,9 +43,22 @@ export function ConditionNode({ id, data }) {
           <span className="vs-branch-label vs-branch-label--false">✗ false</span>
         </div>
       </div>
-      <Handle type="target" position={Position.Left} id="input" className="vs-handle" />
-      <Handle type="source" position={Position.Right} id="true" className="vs-handle" style={{ top: '35%' }} />
-      <Handle type="source" position={Position.Right} id="false" className="vs-handle" style={{ top: '65%' }} />
+
+      {/* Target handle on left */}
+      <div className="vs-handle-row vs-handle-row--left" style={{ top: '50%' }}>
+        <span className="vs-handle-label">input</span>
+        <Handle type="target" position={Position.Left} id="input" className="vs-handle" />
+      </div>
+
+      {/* True/false source handles on right, labeled */}
+      <div className="vs-handle-row vs-handle-row--right" style={{ top: '38%' }}>
+        <Handle type="source" position={Position.Right} id="true" className="vs-handle vs-handle--true" />
+        <span className="vs-handle-label vs-handle-label--true">true ✓</span>
+      </div>
+      <div className="vs-handle-row vs-handle-row--right" style={{ top: '65%' }}>
+        <Handle type="source" position={Position.Right} id="false" className="vs-handle vs-handle--false" />
+        <span className="vs-handle-label vs-handle-label--false">false ✗</span>
+      </div>
     </div>
   );
 }

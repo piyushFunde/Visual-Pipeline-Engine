@@ -1,14 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import ReactFlow, { Background, Controls, MiniMap } from 'reactflow';
+import ReactFlow, { Background, BackgroundVariant, Controls, MiniMap } from 'reactflow';
+import { NodeLibrary } from './components/NodeLibrary';
 import { shallow } from 'zustand/shallow';
 import { useParams } from 'react-router-dom';
 import {
+  Activity,
   ArrowLeft,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   Code2,
   Database,
+  FlaskConical,
+  Gauge,
   GitBranch,
   Globe,
   LoaderCircle,
@@ -21,6 +26,7 @@ import {
   Plus,
   RotateCcw,
   Sparkles,
+  Stethoscope,
   Timer,
   Type,
   Webhook,
@@ -172,7 +178,9 @@ export const PipelineUI = ({ onBack, onLogout }) => {
   const wrapperRef = useRef(null);
   const flowInstanceRef = useRef(null);
   const suppressUnsavedRef = useRef(false);
+  const deployWrapRef = useRef(null);
   const [activeTab, setActiveTab] = useState('doctor');
+  const [drawerOpen, setDrawerOpen] = useState(true);
   const [pipelineId, setPipelineId] = useState(routeId && routeId !== 'new' ? Number(routeId) : null);
   const [workflowTitle, setWorkflowTitle] = useState('Untitled Workflow');
   const [editingTitle, setEditingTitle] = useState(false);
@@ -287,6 +295,17 @@ export const PipelineUI = ({ onBack, onLogout }) => {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
+  useEffect(() => {
+    if (!deployMenuOpen) return undefined;
+    const handleOutside = (event) => {
+      if (deployWrapRef.current && !deployWrapRef.current.contains(event.target)) {
+        setDeployMenuOpen(false);
+      }
+    };
+    window.addEventListener('mousedown', handleOutside);
+    return () => window.removeEventListener('mousedown', handleOutside);
+  }, [deployMenuOpen]);
+
   const stepIndexByNode = useMemo(() => {
     const result = new Map();
     runSteps.forEach((step) => result.set(step.nodeId, step));
@@ -400,6 +419,7 @@ export const PipelineUI = ({ onBack, onLogout }) => {
       setNodes(safeJson(result.nodes));
       setEdges(safeJson(result.edges));
       setPipelineId(targetId);
+      if (result.name) setWorkflowTitle(result.name);
       setToast(`Pipeline #${targetId} loaded`);
       setPickerOpen(false);
     } catch (requestError) {
@@ -421,6 +441,8 @@ export const PipelineUI = ({ onBack, onLogout }) => {
       setCurrentRun(runRecord);
       setReplayIndex(runRecord.steps.length ? 0 : runRecord.steps.length);
       setPlaying(runRecord.steps.length > 0);
+      setActiveTab('replay');
+      setDrawerOpen(true);
       setToast('Run recorded');
     } catch (requestError) {
       setError(requestError.message);
@@ -535,7 +557,7 @@ export const PipelineUI = ({ onBack, onLogout }) => {
           <button
             type="button"
             className={`flow-health flow-health--${scoreTone}`}
-            onClick={() => setActiveTab('doctor')}
+            onClick={() => { setActiveTab('doctor'); setDrawerOpen(true); }}
           >
             <span /> Flow health {scoreLabel}
           </button>
@@ -550,7 +572,7 @@ export const PipelineUI = ({ onBack, onLogout }) => {
             {busy === 'run' ? <LoaderCircle className="spin" size={15} /> : <Play size={14} fill="currentColor" />}
             Run
           </button>
-          <div className="deploy-dropdown-wrap">
+          <div className="deploy-dropdown-wrap" ref={deployWrapRef}>
             <button
               type="button"
               className="pipeline-button pipeline-button--deploy"
@@ -574,31 +596,17 @@ export const PipelineUI = ({ onBack, onLogout }) => {
       </header>
 
       <div className="pipeline-workspace">
+        {/* ── Left Node Library Sidebar ── */}
+        <NodeLibrary onAdd={(type) => addNodeAt(type)} />
+
+        {/* ── Canvas ── */}
         <section className="pipeline-canvas-column" aria-label="Pipeline canvas">
           <div className="pipeline-canvas" ref={wrapperRef} onDrop={onDrop} onDragOver={(event) => event.preventDefault()}>
-            <nav className="node-dock" aria-label="Add pipeline node">
-              {NODE_CATALOG.map(({ type, label, icon: Icon }) => (
-                <button
-                  type="button"
-                  key={type}
-                  aria-label={`Add ${label} node`}
-                  title={`Add ${label}`}
-                  onClick={() => addNodeAt(type)}
-                  draggable
-                  onDragStart={(event) => {
-                    event.dataTransfer.setData('application/reactflow', type);
-                    event.dataTransfer.effectAllowed = 'move';
-                  }}
-                >
-                  <Icon size={16} aria-hidden="true" />
-                </button>
-              ))}
-            </nav>
             {nodes.length === 0 ? (
               <div className="pipeline-empty">
                 <span><Plus size={20} /></span>
                 <strong>Build your first flow</strong>
-                <small>Add a node from the dock and connect its next step.</small>
+                <small>Drag a node from the left panel or click it to place it on the canvas.</small>
               </div>
             ) : null}
             <ReactFlow
@@ -613,12 +621,19 @@ export const PipelineUI = ({ onBack, onLogout }) => {
               proOptions={{ hideAttribution: true }}
               fitView
             >
-              <Background color="#29292D" gap={20} size={1} />
-              <Controls />
+              <Background
+                variant={BackgroundVariant.Dots}
+                gap={20}
+                size={1.3}
+                color="rgba(255,255,255,0.12)"
+              />
+              <Controls className="vs-controls" />
               <MiniMap
                 pannable
                 zoomable
-                nodeColor={(node) => node.className?.includes('skipped') ? '#4A4A50' : '#9FD8B7'}
+                className="vs-minimap"
+                nodeColor={(node) => node.className?.includes('skipped') ? '#4A4A50' : '#8b5cf6'}
+                maskColor="rgba(13,15,20,0.75)"
               />
             </ReactFlow>
             <div className="canvas-legend" aria-label="Node status legend">
@@ -629,194 +644,244 @@ export const PipelineUI = ({ onBack, onLogout }) => {
             </div>
           </div>
         </section>
+      </div>
 
-        <aside className="pipeline-inspector" aria-label="Pipeline inspector">
-          <div className="pipeline-tabs" role="tablist" aria-label="Pipeline tools">
+      {/* ── Collapsible Bottom Studio Drawer ── */}
+      <section
+        className={`studio-drawer ${drawerOpen ? 'studio-drawer--open' : 'studio-drawer--collapsed'}`}
+        aria-label="Workflow studio drawer"
+      >
+        <div className="studio-drawer__bar">
+          <div className="studio-drawer__tabs" role="tablist" aria-label="Pipeline tools">
             {[
-              ['doctor', 'Flow Doctor'],
-              ['tests', 'Tests'],
-              ['estimate', 'Estimate'],
-            ].map(([tab, title]) => (
+              ['doctor', 'Flow Doctor', Stethoscope, visibleIssues.length > 0 ? visibleIssues.length : null],
+              ['replay', 'Run Replay', Activity, runSteps.length > 0 ? runSteps.length : null],
+              ['tests', 'Tests', FlaskConical, testCases.length > 0 ? testCases.length : null],
+              ['estimate', 'Estimate', Gauge, null],
+            ].map(([tab, title, TabIcon, badge]) => (
               <button
                 type="button"
                 role="tab"
                 aria-selected={activeTab === tab}
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                className={`studio-drawer__tab${activeTab === tab ? ' is-active' : ''}`}
+                onClick={() => {
+                  if (activeTab === tab && drawerOpen) return;
+                  setActiveTab(tab);
+                  setDrawerOpen(true);
+                }}
               >
-                {title}
+                <TabIcon size={13} aria-hidden="true" />
+                <span>{title}</span>
+                {badge !== null ? <em className="studio-drawer__badge">{badge}</em> : null}
               </button>
             ))}
           </div>
-          {error ? <div className="pipeline-error" role="alert">{error}</div> : null}
-          {activeTab === 'doctor' ? (
-            <div className="doctor-panel">
-              <div className="doctor-summary">
-                <div className={`score-ring score-ring--${scoreTone}`} style={{ '--score': `${scoreLabel}%` }}>
-                  <span>{scoreLabel}</span>
-                </div>
-                <div>
-                  <h2>Flow Doctor</h2>
-                  <p>{visibleIssues.length} issues to review. Click one to find it on the canvas.</p>
-                </div>
-              </div>
-              <div className="doctor-issues">
-                {visibleIssues.length === 0 ? (
-                  <div className="doctor-empty">Your flow is looking good.</div>
-                ) : visibleIssues.map((issue) => (
-                  <article className={`doctor-issue doctor-issue--${severityClass(issue.severity)}`} key={issue.id}>
-                    <button type="button" className="doctor-issue__select" onClick={() => selectIssue(issue)}>
-                      <span className="issue-kicker">{issue.code.replaceAll('_', ' ')} · {issue.nodeId || 'PIPELINE'}</span>
-                      <strong>{issue.title}</strong>
-                      <span>{issue.detail}</span>
-                    </button>
-                    {issue.fix ? (
-                      <button type="button" className="doctor-fix" onClick={() => applyFix(issue)}>
-                        {issue.fix.label}
-                      </button>
-                    ) : null}
-                  </article>
-                ))}
-                {fixedIssues.map((issueId) => (
-                  <div className="doctor-fixed" key={issueId}>Fixed</div>
-                ))}
-              </div>
-            </div>
-          ) : null}
 
-          {activeTab === 'tests' ? (
-            <div className="tests-panel">
-              <div className="panel-heading">
-                <div><h2>Test cases</h2><p>Run saved assertions against this flow.</p></div>
-                <button type="button" className="doctor-fix" onClick={runTests} disabled={busy !== ''}>
-                  {busy === 'tests' ? 'Running…' : 'Run all'}
-                </button>
-              </div>
-              <p className="test-summary">
-                {Object.values(testResults).filter((result) => result.passed).length} of {testCases.length} passing
-              </p>
-              {testCases.map((testCase) => {
-                const result = testResults[testCase.id];
-                return (
-                  <article className="test-case" key={testCase.id}>
-                    <div className="test-case__head">
-                      <strong>{testCase.name}</strong>
-                      <span className={`test-status ${result ? (result.passed ? 'passed' : 'failed') : ''}`}>
-                        {busy === 'tests' ? 'Running' : result ? (result.passed ? 'Passed' : 'Failed') : 'Not run'}
-                      </span>
-                    </div>
-                    {result?.failures?.length ? (
-                      <details className="test-failures">
-                        <summary>{result.failures.length} failure{result.failures.length === 1 ? '' : 's'}</summary>
-                        {result.failures.map((failure, index) => (
-                          <pre key={index}>Expected: {JSON.stringify(failure.expected)}{'\n'}Actual: {JSON.stringify(failure.actual)}</pre>
-                        ))}
-                      </details>
-                    ) : null}
-                  </article>
-                );
-              })}
-              {testCases.length === 0 ? (
-                <div className="doctor-empty">Save the pipeline and add a test case to get started.</div>
-              ) : null}
-            </div>
-          ) : null}
-
-          {activeTab === 'estimate' ? (
-            <div className="estimate-panel">
-              <div className="panel-heading"><div><h2>Estimate</h2><p>Heuristic only · not measured</p></div></div>
-              <span className="estimate-badge">Estimate</span>
-              {estimate?.nodes?.map((nodeEstimate) => {
-                const node = nodes.find((item) => item.id === nodeEstimate.nodeId);
-                const max = Math.max(1, ...estimate.nodes.map((item) => item.estimatedMs));
-                return (
-                  <div className="estimate-row" key={nodeEstimate.nodeId}>
-                    <div><strong>{node?.data?.name || node?.data?.inputName || node?.type || nodeEstimate.nodeId}</strong>
-                      <span>{nodeEstimate.estimatedMs} ms · {nodeEstimate.estimatedTokens} tokens</span></div>
-                    <i style={{ width: `${Math.max(4, (nodeEstimate.estimatedMs / max) * 100)}%` }} />
-                  </div>
-                );
-              })}
-              {estimate ? (
-                <div className="estimate-total">
-                  <strong>Total estimate · {estimate.total.estimatedMs} ms</strong>
-                  <span>{estimate.total.estimatedTokens} prompt tokens</span>
-                  <small>{estimate.method}</small>
-                </div>
-              ) : <div className="doctor-empty">Calculating estimate…</div>}
-            </div>
-          ) : null}
-        </aside>
-      </div>
-
-      <section className="replay-panel" aria-label="Run replay">
-        <div className="replay-header">
-          <div className="replay-title">
-            <h2>Run replay</h2>
+          <div className="studio-drawer__right">
             {currentRun?.simulated ? <span className="simulated-chip">Simulated</span> : null}
-            {slowestStep ? (
-              <small>Slowest step: {nodes.find((node) => node.id === slowestStep.nodeId)?.data?.name || slowestStep.nodeId}
+            {activeTab === 'replay' && slowestStep ? (
+              <small className="studio-drawer__hint">
+                Slowest: {nodes.find((node) => node.id === slowestStep.nodeId)?.data?.name || slowestStep.nodeId}
                 {' · '}{slowestStep.durationMs} ms ({currentRun.totalMs
-                  ? Math.round((slowestStep.durationMs / currentRun.totalMs) * 100) : 0}% of the run)
+                  ? Math.round((slowestStep.durationMs / currentRun.totalMs) * 100) : 0}%)
               </small>
             ) : null}
-          </div>
-          <div className="replay-controls">
-            <button type="button" aria-label="Previous step" onClick={() => jumpToStep(Math.max(0, replayIndex - 1))}
-              disabled={!runSteps.length}><ChevronLeft size={16} /></button>
-            <button type="button" className="replay-play" onClick={replay} disabled={!runSteps.length}>
-              {playing ? <Pause size={15} /> : replayIndex >= runSteps.length ? <RotateCcw size={15} /> : <Play size={15} />}
-              {playing ? 'Pause' : replayIndex >= runSteps.length ? 'Replay' : 'Play'}
+            <button
+              type="button"
+              className="studio-drawer__toggle"
+              onClick={() => setDrawerOpen((v) => !v)}
+              aria-label={drawerOpen ? 'Collapse bottom drawer' : 'Expand bottom drawer'}
+              title={drawerOpen ? 'Collapse drawer' : 'Expand drawer'}
+            >
+              {drawerOpen ? <ChevronDown size={15} /> : <ChevronUp size={15} />}
             </button>
-            <button type="button" aria-label="Next step" onClick={() => jumpToStep(Math.min(runSteps.length, replayIndex + 1))}
-              disabled={!runSteps.length}><ChevronRight size={16} /></button>
-            <button type="button" className="speed-toggle" onClick={toggleSpeed}>Speed {speed}x</button>
-            {currentRun ? <button type="button" className="save-run-test" onClick={saveRunAsTest}>Save this run as a test</button> : null}
           </div>
         </div>
-        {runSteps.length ? (
-          <>
-            <div className="replay-timeline" role="list" aria-label="Run timeline">
-              {runSteps.map((step, index) => {
-                const node = nodes.find((item) => item.id === step.nodeId);
-                const label = node?.data?.name || node?.data?.inputName || node?.data?.outputName
-                  || node?.type || step.nodeId;
-                return (
-                  <button
-                    type="button"
-                    role="listitem"
-                    className={`timeline-step ${index < replayIndex ? 'is-done' : ''} ${index === replayIndex ? 'is-active' : ''} ${step.status === 'SKIPPED' ? 'is-skipped' : ''}`}
-                    key={step.id || step.nodeId}
-                    style={{ flexGrow: Math.max(1, step.durationMs || 1) }}
-                    onClick={() => jumpToStep(index)}
-                    aria-label={`${label}, ${step.status}, ${step.durationMs} milliseconds`}
-                  >
-                    <strong>{label}</strong>
-                    <span>{step.status === 'SKIPPED' ? 'Not taken' : `${step.durationMs} ms`}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="replay-inspector">
-              {activeStep ? (
-                <>
-                  <div className="replay-data"><strong>Input</strong><pre>{JSON.stringify(safeJson(activeStep.inputJson), null, 2)}</pre></div>
-                  <div className="replay-data"><strong>Output</strong><pre>{JSON.stringify(safeJson(activeStep.outputJson), null, 2)}</pre></div>
-                  <div className="replay-meta">
-                    <span>Step {activeStep.orderIndex + 1} / {runSteps.length}</span>
-                    <strong>{nodes.find((node) => node.id === activeStep.nodeId)?.data?.name || activeStep.nodeId}</strong>
-                    <span>{activeStep.durationMs} ms</span>
-                    {activeStep.tokens != null ? <span>{activeStep.tokens} tokens</span> : null}
+
+        {drawerOpen ? (
+          <div className="studio-drawer__content">
+            {error ? <div className="pipeline-error" role="alert">{error}</div> : null}
+
+            {activeTab === 'doctor' ? (
+              <div className="doctor-panel doctor-panel--horizontal">
+                <div className="doctor-summary">
+                  <div className={`score-ring score-ring--${scoreTone}`} style={{ '--score': `${scoreLabel}%` }}>
+                    <span>{scoreLabel}</span>
                   </div>
-                </>
-              ) : (
-                <p className="replay-empty">Run a pipeline to record a sample, then click any timeline step to inspect its inputs and outputs.</p>
-              )}
-            </div>
-          </>
-        ) : (
-          <div className="replay-empty replay-empty--idle">Press Run to record a sample run and review each node’s input and output.</div>
-        )}
+                  <div>
+                    <h2>Flow Doctor</h2>
+                    <p>{visibleIssues.length} issues to review. Click one to locate it on the canvas.</p>
+                  </div>
+                </div>
+                <div className="doctor-issues doctor-issues--grid">
+                  {visibleIssues.length === 0 ? (
+                    <div className="doctor-empty">Your flow is looking good.</div>
+                  ) : visibleIssues.map((issue) => (
+                    <article className={`doctor-issue doctor-issue--${severityClass(issue.severity)}`} key={issue.id}>
+                      <button type="button" className="doctor-issue__select" onClick={() => selectIssue(issue)}>
+                        <span className="issue-kicker">{issue.code.replaceAll('_', ' ')} · {issue.nodeId || 'PIPELINE'}</span>
+                        <strong>{issue.title}</strong>
+                        <span>{issue.detail}</span>
+                      </button>
+                      {issue.fix ? (
+                        <button type="button" className="doctor-fix" onClick={() => applyFix(issue)}>
+                          {issue.fix.label}
+                        </button>
+                      ) : null}
+                    </article>
+                  ))}
+                  {fixedIssues.map((issueId) => (
+                    <div className="doctor-fixed" key={issueId}>Fixed</div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {activeTab === 'replay' ? (
+              <div className="replay-panel replay-panel--drawer" aria-label="Run replay">
+                <div className="replay-header">
+                  <div className="replay-title">
+                    <h2>Run replay</h2>
+                    {slowestStep ? (
+                      <small>Slowest step: {nodes.find((node) => node.id === slowestStep.nodeId)?.data?.name || slowestStep.nodeId}
+                        {' · '}{slowestStep.durationMs} ms ({currentRun.totalMs
+                          ? Math.round((slowestStep.durationMs / currentRun.totalMs) * 100) : 0}% of the run)
+                      </small>
+                    ) : null}
+                  </div>
+                  <div className="replay-controls">
+                    <button type="button" aria-label="Previous step" onClick={() => jumpToStep(Math.max(0, replayIndex - 1))}
+                      disabled={!runSteps.length}><ChevronLeft size={16} /></button>
+                    <button type="button" className="replay-play" onClick={replay} disabled={!runSteps.length}>
+                      {playing ? <Pause size={15} /> : replayIndex >= runSteps.length ? <RotateCcw size={15} /> : <Play size={15} />}
+                      {playing ? 'Pause' : replayIndex >= runSteps.length ? 'Replay' : 'Play'}
+                    </button>
+                    <button type="button" aria-label="Next step" onClick={() => jumpToStep(Math.min(runSteps.length, replayIndex + 1))}
+                      disabled={!runSteps.length}><ChevronRight size={16} /></button>
+                    <button type="button" className="speed-toggle" onClick={toggleSpeed}>Speed {speed}x</button>
+                    {currentRun ? <button type="button" className="save-run-test" onClick={saveRunAsTest}>Save this run as a test</button> : null}
+                  </div>
+                </div>
+                {runSteps.length ? (
+                  <>
+                    <div className="replay-timeline" role="list" aria-label="Run timeline">
+                      {runSteps.map((step, index) => {
+                        const node = nodes.find((item) => item.id === step.nodeId);
+                        const label = node?.data?.name || node?.data?.inputName || node?.data?.outputName
+                          || node?.type || step.nodeId;
+                        return (
+                          <button
+                            type="button"
+                            role="listitem"
+                            className={`timeline-step ${index < replayIndex ? 'is-done' : ''} ${index === replayIndex ? 'is-active' : ''} ${step.status === 'SKIPPED' ? 'is-skipped' : ''}`}
+                            key={step.id || step.nodeId}
+                            style={{ flexGrow: Math.max(1, step.durationMs || 1) }}
+                            onClick={() => jumpToStep(index)}
+                            aria-label={`${label}, ${step.status}, ${step.durationMs} milliseconds`}
+                          >
+                            <strong>{label}</strong>
+                            <span>{step.status === 'SKIPPED' ? 'Not taken' : `${step.durationMs} ms`}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="replay-inspector">
+                      {activeStep ? (
+                        <>
+                          <div className="replay-data"><strong>Input</strong><pre>{JSON.stringify(safeJson(activeStep.inputJson), null, 2)}</pre></div>
+                          <div className="replay-data"><strong>Output</strong><pre>{JSON.stringify(safeJson(activeStep.outputJson), null, 2)}</pre></div>
+                          <div className="replay-meta">
+                            <span>Step {activeStep.orderIndex + 1} / {runSteps.length}</span>
+                            <strong>{nodes.find((node) => node.id === activeStep.nodeId)?.data?.name || activeStep.nodeId}</strong>
+                            <span>{activeStep.durationMs} ms</span>
+                            {activeStep.tokens != null ? <span>{activeStep.tokens} tokens</span> : null}
+                          </div>
+                        </>
+                      ) : (
+                        <p className="replay-empty">Run a pipeline to record a sample, then click any timeline step to inspect its inputs and outputs.</p>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="replay-empty replay-empty--idle">Press Run to record a sample run and review each node’s input and output.</div>
+                )}
+              </div>
+            ) : null}
+
+            {activeTab === 'tests' ? (
+              <div className="tests-panel tests-panel--horizontal">
+                <div className="panel-heading">
+                  <div>
+                    <h2>Test cases</h2>
+                    <p>
+                      Run saved assertions against this flow ·{' '}
+                      {Object.values(testResults).filter((result) => result.passed).length} of {testCases.length} passing
+                    </p>
+                  </div>
+                  <button type="button" className="doctor-fix" onClick={runTests} disabled={busy !== ''}>
+                    {busy === 'tests' ? 'Running…' : 'Run all'}
+                  </button>
+                </div>
+                <div className="tests-grid">
+                  {testCases.map((testCase) => {
+                    const result = testResults[testCase.id];
+                    return (
+                      <article className="test-case" key={testCase.id}>
+                        <div className="test-case__head">
+                          <strong>{testCase.name}</strong>
+                          <span className={`test-status ${result ? (result.passed ? 'passed' : 'failed') : ''}`}>
+                            {busy === 'tests' ? 'Running' : result ? (result.passed ? 'Passed' : 'Failed') : 'Not run'}
+                          </span>
+                        </div>
+                        {result?.failures?.length ? (
+                          <details className="test-failures">
+                            <summary>{result.failures.length} failure{result.failures.length === 1 ? '' : 's'}</summary>
+                            {result.failures.map((failure, index) => (
+                              <pre key={index}>Expected: {JSON.stringify(failure.expected)}{'\n'}Actual: {JSON.stringify(failure.actual)}</pre>
+                            ))}
+                          </details>
+                        ) : null}
+                      </article>
+                    );
+                  })}
+                  {testCases.length === 0 ? (
+                    <div className="doctor-empty">Save the pipeline and add a test case to get started.</div>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+
+            {activeTab === 'estimate' ? (
+              <div className="estimate-panel estimate-panel--horizontal">
+                <div className="panel-heading">
+                  <div><h2>Estimate</h2><p>Heuristic only · not measured</p></div>
+                  <span className="estimate-badge">Estimate</span>
+                </div>
+                <div className="estimate-grid">
+                  {estimate?.nodes?.map((nodeEstimate) => {
+                    const node = nodes.find((item) => item.id === nodeEstimate.nodeId);
+                    const max = Math.max(1, ...estimate.nodes.map((item) => item.estimatedMs));
+                    return (
+                      <div className="estimate-row" key={nodeEstimate.nodeId}>
+                        <div><strong>{node?.data?.name || node?.data?.inputName || node?.type || nodeEstimate.nodeId}</strong>
+                          <span>{nodeEstimate.estimatedMs} ms · {nodeEstimate.estimatedTokens} tokens</span></div>
+                        <i style={{ width: `${Math.max(4, (nodeEstimate.estimatedMs / max) * 100)}%` }} />
+                      </div>
+                    );
+                  })}
+                </div>
+                {estimate ? (
+                  <div className="estimate-total">
+                    <strong>Total estimate · {estimate.total.estimatedMs} ms</strong>
+                    <span>{estimate.total.estimatedTokens} prompt tokens</span>
+                    <small>{estimate.method}</small>
+                  </div>
+                ) : <div className="doctor-empty">Calculating estimate…</div>}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </section>
       {pickerOpen ? (
         <div className="pipeline-modal-backdrop" onClick={() => setPickerOpen(false)}>

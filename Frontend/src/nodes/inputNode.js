@@ -9,27 +9,29 @@ export function InputNode({ id, data }) {
   const runStatus = data?.runStatus;
 
   return (
-    <div className={`vs-node${runStatus ? ` vs-node--${runStatus.toLowerCase()}` : ''}`}>
-      <div className="vs-node-header">
+    <div className={`vs-node vs-node--input${runStatus ? ` vs-node--${runStatus.toLowerCase()}` : ''}`}>
+      {/* Color-coded category header */}
+      <div className="vs-node-header vs-node-header--input">
         <div className="vs-node-header-left">
-          <span className="vs-node-icon"><LogIn size={15} /></span>
+          <span className="vs-node-icon"><LogIn size={14} /></span>
           <span className="vs-node-title">Input</span>
+          <span className="vs-node-id-chip">{id}</span>
         </div>
         <div className="vs-node-header-actions">
-          <button type="button" className="vs-node-action nodrag" aria-label="Delete" onClick={() => removeNode(id)}>
-            <span style={{ fontSize: 14, lineHeight: 1 }}>✕</span>
-          </button>
+          <button type="button" className="vs-node-action vs-node-action--delete nodrag" aria-label="Delete node" onClick={() => removeNode(id)}>✕</button>
         </div>
       </div>
+
       <p className="vs-node-desc">Pass data of different types into your workflow</p>
+
       <div className="vs-node-body nodrag">
         {/* Name pill */}
         <div className="vs-name-pill">{data?.inputName || 'input_0'}</div>
 
-        {/* Suggestion box */}
+        {/* Suggestion */}
         <div className="vs-suggestion">
-          <Lightbulb size={13} className="vs-suggestion-icon" />
-          <span><strong>Suggestion:</strong> Give the node a distinct name</span>
+          <Lightbulb size={12} className="vs-suggestion-icon" />
+          <span><strong>Tip:</strong> Give the node a distinct name</span>
         </div>
 
         {/* Name field */}
@@ -61,7 +63,11 @@ export function InputNode({ id, data }) {
         </div>
       </div>
 
-      <Handle type="source" position={Position.Right} id="output" className="vs-handle" />
+      {/* Labeled source handle on right */}
+      <div className="vs-handle-row vs-handle-row--right" style={{ top: '50%' }}>
+        <Handle type="source" position={Position.Right} id="output" className="vs-handle" />
+        <span className="vs-handle-label">output</span>
+      </div>
     </div>
   );
 }

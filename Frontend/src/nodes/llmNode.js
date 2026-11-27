@@ -11,19 +11,20 @@ export function LLMNode({ id, data }) {
   const runStatus = data?.runStatus;
 
   return (
-    <div className={`vs-node${runStatus ? ` vs-node--${runStatus.toLowerCase()}` : ''}`}>
-      <div className="vs-node-header">
+    <div className={`vs-node vs-node--llm${runStatus ? ` vs-node--${runStatus.toLowerCase()}` : ''}`}>
+      <div className="vs-node-header vs-node-header--llm">
         <div className="vs-node-header-left">
-          <span className="vs-node-icon"><Sparkles size={15} /></span>
+          <span className="vs-node-icon"><Sparkles size={14} /></span>
           <span className="vs-node-title">LLM</span>
+          <span className="vs-node-id-chip">{id}</span>
         </div>
         <div className="vs-node-header-actions">
-          <button type="button" className="vs-node-action nodrag" onClick={() => removeNode(id)}>
-            <span style={{ fontSize: 14, lineHeight: 1 }}>✕</span>
-          </button>
+          <button type="button" className="vs-node-action vs-node-action--delete nodrag" aria-label="Delete node" onClick={() => removeNode(id)}>✕</button>
         </div>
       </div>
+
       <p className="vs-node-desc">Generate a response using a language model.</p>
+
       <div className="vs-node-body nodrag">
         <div className="vs-field-row">
           <label className="vs-label">Model <span className="vs-badge">Dropdown</span></label>
@@ -46,9 +47,22 @@ export function LLMNode({ id, data }) {
           <input className="vs-input nodrag" type="number" value={data?.maxTokens ?? ''} onChange={(e) => update(id, 'maxTokens', e.target.value)} placeholder="512" />
         </div>
       </div>
-      <Handle type="target" position={Position.Left} id="system" className="vs-handle" style={{ top: '38%' }} />
-      <Handle type="target" position={Position.Left} id="prompt" className="vs-handle" style={{ top: '62%' }} />
-      <Handle type="source" position={Position.Right} id="response" className="vs-handle" />
+
+      {/* Labeled target handles on left */}
+      <div className="vs-handle-row vs-handle-row--left" style={{ top: '38%' }}>
+        <span className="vs-handle-label">system</span>
+        <Handle type="target" position={Position.Left} id="system" className="vs-handle" />
+      </div>
+      <div className="vs-handle-row vs-handle-row--left" style={{ top: '62%' }}>
+        <span className="vs-handle-label">prompt</span>
+        <Handle type="target" position={Position.Left} id="prompt" className="vs-handle" />
+      </div>
+
+      {/* Labeled source handle on right */}
+      <div className="vs-handle-row vs-handle-row--right" style={{ top: '50%' }}>
+        <Handle type="source" position={Position.Right} id="response" className="vs-handle" />
+        <span className="vs-handle-label">response</span>
+      </div>
     </div>
   );
 }
